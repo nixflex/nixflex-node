@@ -156,9 +156,17 @@ export class UsageResource {
 // Per-number webhook integration
 // ============================================
 import type { WebhookConfigResponse } from '../types/account.js';
+import { verifyWebhookSignature } from '../webhook-verify.js';
 
 export class Webhooks {
   constructor(private readonly http: HttpClient) {}
+
+  /** Verify a webhook delivery's X-Nixflex-Signature header. Pass the RAW
+   * request body (string or Buffer) and your key_secret. Returns true only
+   * for an authentic, fresh signature. See webhook-verify.ts. */
+  verify(rawBody: string | Buffer, signatureHeader: string | null | undefined, keySecret: string, options?: import('../webhook-verify.js').VerifyOptions): boolean {
+    return verifyWebhookSignature(rawBody, signatureHeader, keySecret, options);
+  }
 
   /** Point a number's post-call events at your HTTPS endpoint.
    * slot 2 = the second destination (webhook2). */

@@ -132,3 +132,17 @@ export interface BatchLaunchResponse {
   recipients_count: number;
   queued_count: number;
 }
+
+export interface CallDeleteResponse {
+  call_id: string;
+  deleted: boolean;
+  /** Whether a recording file was found and removed from storage. */
+  recording_deleted: boolean;
+}
+
+export interface CallDeleteAllResponse {
+  deleted: boolean;
+  calls_deleted: number;
+  recordings_deleted: number;
+  sms_deleted: number;
+}

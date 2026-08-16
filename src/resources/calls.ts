@@ -2,7 +2,7 @@
 // src/resources/calls.ts
 // ============================================
 import type { HttpClient, RequestOptions } from '../client.js';
-import type { Call, OutboundCallParams, OutboundCallResponse } from '../types/calls.js';
+import type { Call, OutboundCallParams, OutboundCallResponse, CallDeleteResponse, CallDeleteAllResponse } from '../types/calls.js';
 import type { ListParams } from '../types/agents.js';
 
 export class Calls {
@@ -41,6 +41,18 @@ export class Calls {
    * outbound calls. */
   get(callId: string, opts?: RequestOptions): Promise<Call> {
     return this.http.request<Call>('GET', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
+  }
+
+  /** GDPR: PERMANENTLY erase one call - the record AND its recording file.
+   * Irreversible. Throws NixflexNotFoundError if the ID is not yours. */
+  delete(callId: string, opts?: RequestOptions): Promise<CallDeleteResponse> {
+    return this.http.request<CallDeleteResponse>('DELETE', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
+  }
+
+  /** GDPR: PERMANENTLY erase ALL calls, recordings, and SMS messages on this
+   * key. Irreversible - intended for data-erasure requests and offboarding. */
+  deleteAll(opts?: RequestOptions): Promise<CallDeleteAllResponse> {
+    return this.http.request<CallDeleteAllResponse>('DELETE', '/calls', undefined, undefined, opts);
   }
 }
 

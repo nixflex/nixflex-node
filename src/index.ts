@@ -75,3 +75,4 @@ export * from './types/calls.js';
 export * from './types/phone-numbers.js';
 export * from './types/sms.js';
 export * from './types/account.js';
+export { verifyWebhookSignature, type VerifyOptions } from './webhook-verify.js';

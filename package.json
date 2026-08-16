@@ -1,11 +1,24 @@
 {
   "name": "nixflex",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Official Node.js SDK for the Nixflex voice AI platform - AI phone agents, outbound campaigns, and SMS.",
-  "keywords": ["nixflex", "voice ai", "ai phone agent", "telephony", "sms", "voice agent", "ai calls"],
+  "keywords": [
+    "nixflex",
+    "voice ai",
+    "ai phone agent",
+    "telephony",
+    "sms",
+    "voice agent",
+    "ai calls"
+  ],
   "homepage": "https://docs.nixflex.com",
-  "bugs": { "url": "https://github.com/nixflex/nixflex-node/issues" },
-  "repository": { "type": "git", "url": "git+https://github.com/nixflex/nixflex-node.git" },
+  "bugs": {
+    "url": "https://github.com/nixflex/nixflex-node/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nixflex/nixflex-node.git"
+  },
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -18,14 +31,21 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
-  "engines": { "node": ">=18" },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "check": "node --test tests/*.test.cjs",
     "prepublishOnly": "npm run build && npm run check"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0"
   }
