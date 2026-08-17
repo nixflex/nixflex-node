@@ -75,6 +75,43 @@ try {
 - **Timeouts + AbortSignal support** per client or per request
 - **Zero runtime dependencies** — native fetch, Node 18+
 
+## Verifying webhooks
+
+Nixflex signs every webhook delivery with an `X-Nixflex-Signature` header. Verify it before trusting a payload — pass the **raw** request body, not a re-serialized object:
+
+```js
+import express from 'express';
+import { verifyWebhookSignature } from 'nixflex';
+
+const app = express();
+
+app.post('/nixflex/calls', express.raw({ type: 'application/json' }), (req, res) => {
+  const ok = verifyWebhookSignature(
+    req.body,                                  // raw Buffer
+    req.get('x-nixflex-signature'),
+    process.env.NIXFLEX_KEY_SECRET             // the nxfs_... half of your key
+  );
+  if (!ok) return res.sendStatus(400);
+
+  const event = JSON.parse(req.body.toString('utf8'));
+  // handle event.event === 'call.completed'
+  res.sendStatus(200);
+});
+```
+
+Returns `false` for a tampered body, wrong secret, malformed header, or a signature older than the tolerance window (300 seconds; override with `{ toleranceSeconds }`). It never throws.
+
+## Deleting call data
+
+```js
+await client.calls.delete(callId);   // one call: record, transcript, recording
+await client.calls.deleteAll();      // everything on the key
+```
+
+Both are immediate and irreversible — fetch anything you need to keep first.
+
 ## Docs
 
 Full API reference: **https://docs.nixflex.com**
+
+Release history: [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE).

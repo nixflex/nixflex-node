@@ -1,17 +1,22 @@
 {
   "name": "nixflex",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Official Node.js SDK for the Nixflex voice AI platform - AI phone agents, outbound campaigns, and SMS.",
   "keywords": [
     "nixflex",
-    "voice ai",
-    "ai phone agent",
+    "voice-ai",
+    "voice-agent",
+    "phone",
     "telephony",
+    "ai-receptionist",
+    "twilio",
+    "telnyx",
     "sms",
-    "voice agent",
-    "ai calls"
+    "speech",
+    "api-client",
+    "sdk"
   ],
-  "homepage": "https://docs.nixflex.com",
+  "homepage": "https://github.com/nixflex/nixflex-node#readme",
   "bugs": {
     "url": "https://github.com/nixflex/nixflex-node/issues"
   },
@@ -34,7 +39,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=18"
@@ -48,5 +54,6 @@
     "@types/node": "^26.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0"
-  }
+  },
+  "author": "Nixflex"
 }
