@@ -30,8 +30,11 @@ export interface SmsCampaignRecipient {
   variables?: Record<string, string>;
 }
 
-/** SMS campaigns currently require a TWILIO from_number - Telnyx numbers are
- * rejected at create (single sends via sms.send work on both carriers). */
+/** from_number may be on EITHER carrier (Twilio or Telnyx) - the campaign
+ * sends using that number's own credentials, so it must be a number on your
+ * account. (An earlier doc page wrongly said Telnyx was rejected at create;
+ * the engine routes by provider and has done since the Twilio-only lookup
+ * was removed.) */
 export interface SmsCampaignCreateParams {
   agent_id: string;
   /** Your imported TWILIO number. */

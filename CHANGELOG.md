@@ -5,6 +5,12 @@ All notable changes to the `nixflex` package. This project follows
 features, major for breaking changes. Published methods are never removed or
 renamed within a major version.
 
+## 0.2.2
+
+- Corrected the SMS campaign documentation: rom_number may be on either carrier
+  (Twilio or Telnyx). An earlier docs page wrongly stated Telnyx was rejected at
+  create; the engine routes by provider. No code behaviour changed.
+
 ## 0.2.1
 
 - Added MIT `LICENSE`, this changelog, and repository/homepage/issue metadata

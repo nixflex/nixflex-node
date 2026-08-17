@@ -81,8 +81,8 @@ export class SmsCampaigns {
   constructor(private readonly http: HttpClient) {}
 
   /** Create a one-time SMS broadcast ({{variable}} templating per recipient,
-   * up to 10,000 recipients). Requires a TWILIO from_number - Telnyx numbers
-   * are rejected at create (single sends support both carriers). */
+   * up to 10,000 recipients). from_number may be on either carrier (Twilio or
+   * Telnyx) and must be a number on your own account. */
   create(params: SmsCampaignCreateParams, opts?: RequestOptions): Promise<SmsCampaign> {
     return this.http.request('POST', '/sms/campaigns', params, undefined, opts);
   }
