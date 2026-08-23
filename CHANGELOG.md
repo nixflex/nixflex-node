@@ -1,3 +1,8 @@
+## 0.3.0 (2026-08-23)
+
+- Call type: `charged_minutes` (minutes actually billed - transfers stop the meter at handoff, so this can be less than the recording length)
+- Call type: `ended_reason` documented with the full value list, including the new `callee_hangup` (outbound) and carrier words (`busy`, `failed`, `no-answer`, `canceled`)
+- No breaking changes. `list` pagination (`limit`/`offset`) shipped previously in 0.2.x.
 # Changelog
 
 All notable changes to the `nixflex` package. This project follows

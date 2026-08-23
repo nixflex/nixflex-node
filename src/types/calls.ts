@@ -26,7 +26,14 @@ export interface Call {
   answered_at: number | null;
   /** TIME CONNECTED in ms (answer to hangup) - the number you are billed on. Ring time excluded, so on outbound this is NOT end_timestamp - start_timestamp. */
   duration_ms: number;
+  /** Why the call ended: completed, transferred, voicemail_detected, silence_timeout,
+   * ivr_timeout, max_duration_reached, caller_hangup (inbound), callee_hangup (outbound),
+   * busy / failed / no-answer / canceled (carrier words for calls that never connected),
+   * concurrency_limit, and rare infrastructure endings. */
   ended_reason: string;
+  /** Minutes actually charged for this call. Transfers stop the meter at handoff, so
+   * this can be less than duration_ms suggests - the recording runs to the end either way. */
+  charged_minutes?: number;
   /** A single string, one turn per line - not an array of turn objects. */
   transcript: string;
   call_summary: string;
