@@ -48,6 +48,12 @@ export interface AgentCreateParams {
   amd_enabled?: boolean;
   /** Keypad digits instead of speech. Three-state: true/false explicit, null = not set (a number's own setting decides). */
   dtmf_enabled?: boolean | null;
+  /** Leave a message on detected voicemails. Applies to DASHBOARD-imported numbers on
+   * this agent; API-imported numbers use their own per-number setting instead. Enabling
+   * without voicemail_message is rejected with voicemail_message_required. */
+  voicemail_leave_enabled?: boolean;
+  /** Spoken word for word on voicemail when enabled - the agent never rewrites it. */
+  voicemail_message?: string | null;
   /** Where to POST post-call data. */
   webhook_url?: string | null;
   /** Agent can end the call cleanly. Default true. */
@@ -108,6 +114,8 @@ export interface Agent {
   fallback_message: string;
   post_call_sms_enabled?: boolean;
   post_call_sms_template?: string | null;
+  voicemail_leave_enabled?: boolean;
+  voicemail_message?: string | null;
   data_extraction_fields?: unknown[];
   is_active: boolean;
   created_at: string;

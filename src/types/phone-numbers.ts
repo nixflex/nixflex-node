@@ -37,6 +37,12 @@ export interface PhoneNumber {
   custom_prompt?: string | null;
   voice_id?: string | null;
   sms_reply_enabled?: boolean;
+  /** This number's own voicemail setting - the ONLY one that applies to API-imported
+   * numbers (dashboard-imported numbers follow the agent). null = not set = silent
+   * hangup on voicemail. */
+  voicemail_leave_enabled?: boolean | null;
+  /** Spoken word for word on a detected voicemail when enabled. */
+  voicemail_message?: string | null;
   sms_prompt?: string | null;
   web_prompt?: string | null;
   speaking_rate?: number | null;
@@ -54,6 +60,12 @@ export interface PhoneNumberUpdateParams {
   voice_id?: string | null;
   /** SMS agent auto-reply on/off. Default false. */
   sms_reply_enabled?: boolean;
+  /** This number's own voicemail toggle - the only voicemail control for API-imported
+   * numbers. Enabling without a message (here or already saved) is rejected with
+   * voicemail_message_required. null clears. */
+  voicemail_leave_enabled?: boolean | null;
+  /** Spoken word for word on voicemail. Max 2000. null clears. */
+  voicemail_message?: string | null;
   /** SMS agent instructions (independent channel). Max 20000. null clears. */
   sms_prompt?: string | null;
   /** Web agent instructions (independent channel). Max 20000. null clears. */

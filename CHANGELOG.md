@@ -1,3 +1,8 @@
+## 0.3.1 (2026-08-24)
+
+- Voicemail as a structured setting: `voicemail_leave_enabled` + `voicemail_message` on Agent (applies to dashboard-imported numbers) and on PhoneNumber / PhoneNumberUpdateParams (the only voicemail control for API-imported numbers - no inheritance across the two worlds)
+- Enabling without a message is rejected with `voicemail_message_required`
+- No breaking changes.
 ## 0.3.0 (2026-08-23)
 
 - Call type: `charged_minutes` (minutes actually billed - transfers stop the meter at handoff, so this can be less than the recording length)
