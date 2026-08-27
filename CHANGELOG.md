@@ -1,3 +1,7 @@
+## 0.4.0
+
+- New: `client.storage` - connect your own S3-compatible bucket for call recordings (data residency). `storage.set()` verifies with a probe write before saving, `storage.get()` never returns the secret, `storage.delete()` disconnects. Recordings then upload to your bucket and `recording_url` becomes a `byo:` path. See https://docs.nixflex.com/advanced/your-own-storage
+
 ## 0.3.1 (2026-08-24)
 
 - Voicemail as a structured setting: `voicemail_leave_enabled` + `voicemail_message` on Agent (applies to dashboard-imported numbers) and on PhoneNumber / PhoneNumberUpdateParams (the only voicemail control for API-imported numbers - no inheritance across the two worlds)

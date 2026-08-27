@@ -153,6 +153,29 @@ export class UsageResource {
 }
 
 // ============================================
+// Your own recording storage (BYO storage)
+// ============================================
+import type { StorageConfig, StorageSetParams, StorageSetResponse, StorageDeleteResponse } from '../types/account.js';
+export class Storage {
+  constructor(private readonly http: HttpClient) {}
+  /** Connect your own S3-compatible bucket for call recordings (data residency).
+   * The connection is verified with a probe write BEFORE saving - broken
+   * credentials are rejected, never stored. Recordings then upload to your
+   * bucket and Nixflex keeps no copy; recording_url becomes a byo: path. */
+  set(params: StorageSetParams, opts?: RequestOptions): Promise<StorageSetResponse> {
+    return this.http.request('PUT', '/account/storage', params, undefined, opts);
+  }
+  /** Current storage configuration. The secret is never included. */
+  get(opts?: RequestOptions): Promise<StorageConfig> {
+    return this.http.request('GET', '/account/storage', undefined, undefined, opts);
+  }
+  /** Disconnect and clear. Recordings return to Nixflex EU storage from the
+   * next call; files already in your bucket are untouched - they are yours. */
+  delete(opts?: RequestOptions): Promise<StorageDeleteResponse> {
+    return this.http.request('DELETE', '/account/storage', undefined, undefined, opts);
+  }
+}
+// ============================================
 // Per-number webhook integration
 // ============================================
 import type { WebhookConfigResponse } from '../types/account.js';

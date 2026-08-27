@@ -14,7 +14,7 @@
 import { HttpClient, type NixflexClientOptions, type RequestOptions } from './client.js';
 import { Agents } from './resources/agents.js';
 import { Calls, Campaigns } from './resources/calls.js';
-import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks } from './resources/stage3.js';
+import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage } from './resources/stage3.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { errorFromResponse } from './errors.js';
 
@@ -35,6 +35,8 @@ export class Nixflex {
   readonly usage: UsageResource;
   /** Per-number post-call webhook configuration. */
   readonly webhooks: Webhooks;
+  /** Your own S3-compatible recording storage (data residency). */
+  readonly storage: Storage;
 
   constructor(options: NixflexClientOptions) {
     const http = new HttpClient(options);
@@ -46,6 +48,7 @@ export class Nixflex {
     this.keys = new Keys(http);
     this.usage = new UsageResource(http);
     this.webhooks = new Webhooks(http);
+    this.storage = new Storage(http);
   }
 
   /** Create a brand-new API key (unauthenticated signup endpoint - most

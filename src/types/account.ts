@@ -39,3 +39,36 @@ export interface WebhookConfigResponse {
   phone_number?: string;
   url?: string | null;
 }
+
+/** Your own S3-compatible recording storage (BYO storage). */
+export interface StorageConfig {
+  storage_enabled: boolean;
+  endpoint: string | null;
+  region: string | null;
+  bucket: string | null;
+  access_key: string | null;
+}
+export interface StorageSetParams {
+  /** The exact bucket name at your provider. */
+  bucket: string;
+  /** Access key ID with permission to write objects. */
+  access_key: string;
+  /** Secret access key. Write-only - stored encrypted, never returned. */
+  secret_key: string;
+  /** https:// endpoint of your provider. Leave empty for Amazon S3. */
+  endpoint?: string;
+  /** Your bucket's region. Defaults to auto. */
+  region?: string;
+}
+export interface StorageSetResponse {
+  ok: boolean;
+  storage_enabled: boolean;
+  bucket: string;
+  endpoint: string | null;
+  region: string;
+  verified: boolean;
+}
+export interface StorageDeleteResponse {
+  ok: boolean;
+  storage_enabled: boolean;
+}
