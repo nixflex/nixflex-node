@@ -1,3 +1,9 @@
+## 0.5.0
+
+- New: `client.llm` - bring your own OpenAI-compatible model (set() verifies with a real completion + tool-calling probe, key write-only). Calls it serves bill at -0.015/min.
+- New: `client.tts` - bring your own voice (elevenlabs/cartesia, set() verifies with a real synthesis, key write-only). Phone calls only; -0.02/min.
+- Docs: https://docs.nixflex.com/advanced/your-own-llm and /advanced/your-own-tts
+
 ## 0.4.0
 
 - New: `client.storage` - connect your own S3-compatible bucket for call recordings (data residency). `storage.set()` verifies with a probe write before saving, `storage.get()` never returns the secret, `storage.delete()` disconnects. Recordings then upload to your bucket and `recording_url` becomes a `byo:` path. See https://docs.nixflex.com/advanced/your-own-storage
