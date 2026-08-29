@@ -14,7 +14,7 @@
 import { HttpClient, type NixflexClientOptions, type RequestOptions } from './client.js';
 import { Agents } from './resources/agents.js';
 import { Calls, Campaigns } from './resources/calls.js';
-import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage } from './resources/stage3.js';
+import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage, Llm, Tts } from './resources/stage3.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { errorFromResponse } from './errors.js';
 
@@ -37,6 +37,10 @@ export class Nixflex {
   readonly webhooks: Webhooks;
   /** Your own S3-compatible recording storage (data residency). */
   readonly storage: Storage;
+  /** Your own LLM (OpenAI-compatible endpoint, verified with tool-calling probe). */
+  readonly llm: Llm;
+  /** Your own TTS (elevenlabs/cartesia, verified with a real synthesis). */
+  readonly tts: Tts;
 
   constructor(options: NixflexClientOptions) {
     const http = new HttpClient(options);
@@ -49,6 +53,8 @@ export class Nixflex {
     this.usage = new UsageResource(http);
     this.webhooks = new Webhooks(http);
     this.storage = new Storage(http);
+    this.llm = new Llm(http);
+    this.tts = new Tts(http);
   }
 
   /** Create a brand-new API key (unauthenticated signup endpoint - most

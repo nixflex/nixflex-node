@@ -176,6 +176,47 @@ export class Storage {
   }
 }
 // ============================================
+// Your own LLM + your own TTS (BYO providers)
+// ============================================
+import type { LlmConfig, LlmSetParams, LlmSetResponse, LlmDeleteResponse, TtsConfig, TtsSetParams, TtsSetResponse, TtsDeleteResponse } from '../types/account.js';
+export class Llm {
+  constructor(private readonly http: HttpClient) {}
+  /** Connect an OpenAI-compatible model. Verified BEFORE saving with a real
+   * completion + a tool-calling round trip (models without tool calling are
+   * refused). Calls your model serves bill at a $0.015/min discount; if it
+   * fails on a call the standard stack takes over and that call bills standard. */
+  set(params: LlmSetParams, opts?: RequestOptions): Promise<LlmSetResponse> {
+    return this.http.request('PUT', '/account/llm', params, undefined, opts);
+  }
+  /** Current LLM configuration. The provider key is never included. */
+  get(opts?: RequestOptions): Promise<LlmConfig> {
+    return this.http.request('GET', '/account/llm', undefined, undefined, opts);
+  }
+  /** Disconnect. Calls return to the standard stack and rate from the next call. */
+  delete(opts?: RequestOptions): Promise<LlmDeleteResponse> {
+    return this.http.request('DELETE', '/account/llm', undefined, undefined, opts);
+  }
+}
+export class Tts {
+  constructor(private readonly http: HttpClient) {}
+  /** Connect your voice provider (elevenlabs or cartesia). Verified BEFORE
+   * saving with one real synthesis using the exact voice ID. Phone calls only -
+   * web calls keep the standard voice. Calls your voice serves bill at a
+   * $0.02/min discount; on failure the standard voice takes over and that call
+   * bills the standard TTS rate. */
+  set(params: TtsSetParams, opts?: RequestOptions): Promise<TtsSetResponse> {
+    return this.http.request('PUT', '/account/tts', params, undefined, opts);
+  }
+  /** Current TTS configuration. The provider key is never included. */
+  get(opts?: RequestOptions): Promise<TtsConfig> {
+    return this.http.request('GET', '/account/tts', undefined, undefined, opts);
+  }
+  /** Disconnect. Calls return to the standard voice and rate from the next call. */
+  delete(opts?: RequestOptions): Promise<TtsDeleteResponse> {
+    return this.http.request('DELETE', '/account/tts', undefined, undefined, opts);
+  }
+}
+// ============================================
 // Per-number webhook integration
 // ============================================
 import type { WebhookConfigResponse } from '../types/account.js';
