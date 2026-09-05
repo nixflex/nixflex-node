@@ -38,7 +38,7 @@ export interface RequestOptions {
 
 const DEFAULT_BASE_URL = 'https://api.nixflex.com';
 const DEFAULT_TIMEOUT_MS = 30_000;
-const SDK_VERSION = '0.6.0'; // bump by hand with package.json on every release (was stuck at 0.1.0 until 0.6.0)
+const SDK_VERSION = '0.7.0'; // bump by hand with package.json on every release (was stuck at 0.1.0 until 0.6.0)
 
 export class HttpClient {
   private readonly apiKey: string;

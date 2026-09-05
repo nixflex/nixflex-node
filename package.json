@@ -1,6 +1,6 @@
 {
   "name": "nixflex",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Official Node.js SDK for the Nixflex voice AI platform - AI phone agents, outbound campaigns, and SMS.",
   "keywords": [
     "nixflex",
@@ -26,6 +26,7 @@
   },
   "license": "MIT",
   "type": "module",
+  "bin": { "nixflex": "./dist/cli/index.js" },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -46,7 +47,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "build": "tsup",
     "check": "node --test tests/*.test.cjs",
     "prepublishOnly": "npm run build && npm run check"
   },

@@ -1,3 +1,6 @@
+## 0.7.0
+- New: the `nixflex` CLI ships in this package - `npx nixflex --help`. Agents, calls, numbers, caller context (incl. CSV import), SMS, usage, doctor, `login` (key stored in ~/.nixflex/config.json) and `mcp setup`. Every command takes `--json`; deletes need `--confirm`. Zero dependencies - it calls this SDK. Docs: https://docs.nixflex.com/cli
+
 ## 0.6.0
 - New: `client.callers` - caller context on one of your numbers: `get()`, `set()` (omitted fields kept, null removes), `delete()` (erases yours and the engine's), `import()` (up to 1,000 rows, validated before any write). One record per (your number, caller number). Docs: https://docs.nixflex.com/concepts/caller-context
 - New: `incall_sms_enabled` on agent create/update/get - texting during a call and automatic booking-confirmation texts. Default false for new agents. Docs: https://docs.nixflex.com/actions/in-call-sms
