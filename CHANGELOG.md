@@ -1,3 +1,7 @@
+## 0.6.0
+- New: `client.callers` - caller context on one of your numbers: `get()`, `set()` (omitted fields kept, null removes), `delete()` (erases yours and the engine's), `import()` (up to 1,000 rows, validated before any write). One record per (your number, caller number). Docs: https://docs.nixflex.com/concepts/caller-context
+- New: `incall_sms_enabled` on agent create/update/get - texting during a call and automatic booking-confirmation texts. Default false for new agents. Docs: https://docs.nixflex.com/actions/in-call-sms
+- Fix: User-Agent now reports the real SDK version (was stuck at 0.1.0).
 ## 0.5.0
 
 - New: `client.llm` - bring your own OpenAI-compatible model (set() verifies with a real completion + tool-calling probe, key write-only). Calls it serves bill at -0.015/min.

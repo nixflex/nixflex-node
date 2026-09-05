@@ -113,6 +113,9 @@ export interface Agent {
   greet_by_name?: boolean;
   fallback_message: string;
   post_call_sms_enabled?: boolean;
+  /** Texting during a call + automatic booking-confirmation texts. Default false for
+   * new agents; agents created before this setting existed were switched on. */
+  incall_sms_enabled?: boolean;
   post_call_sms_template?: string | null;
   voicemail_leave_enabled?: boolean;
   voicemail_message?: string | null;

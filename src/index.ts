@@ -7,7 +7,8 @@
 //   const call = await client.calls.create({ agent_id, to_number, prompt });
 //
 // Surface: agents, calls, campaigns (voice batch), phoneNumbers, sms
-// (+ sms.campaigns), keys, usage, webhooks (per-number config).
+// (+ sms.campaigns), keys, usage, webhooks (per-number config), storage, llm,
+// tts, callers (caller context).
 // The docs (docs.nixflex.com) are the single source of truth - when the API
 // changes, the docs change, and this SDK changes in the same session.
 // ============================================
@@ -15,6 +16,7 @@ import { HttpClient, type NixflexClientOptions, type RequestOptions } from './cl
 import { Agents } from './resources/agents.js';
 import { Calls, Campaigns } from './resources/calls.js';
 import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage, Llm, Tts } from './resources/stage3.js';
+import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { errorFromResponse } from './errors.js';
 
@@ -41,6 +43,8 @@ export class Nixflex {
   readonly llm: Llm;
   /** Your own TTS (elevenlabs/cartesia, verified with a real synthesis). */
   readonly tts: Tts;
+  /** Caller context - what the agent knows about each caller on one of your numbers. */
+  readonly callers: Callers;
 
   constructor(options: NixflexClientOptions) {
     const http = new HttpClient(options);
@@ -55,6 +59,7 @@ export class Nixflex {
     this.storage = new Storage(http);
     this.llm = new Llm(http);
     this.tts = new Tts(http);
+    this.callers = new Callers(http);
   }
 
   /** Create a brand-new API key (unauthenticated signup endpoint - most
@@ -84,4 +89,5 @@ export * from './types/calls.js';
 export * from './types/phone-numbers.js';
 export * from './types/sms.js';
 export * from './types/account.js';
+export * from './types/callers.js';
 export { verifyWebhookSignature, type VerifyOptions } from './webhook-verify.js';
