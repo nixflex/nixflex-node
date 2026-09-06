@@ -1,3 +1,9 @@
+## 0.8.0
+- CLI now covers every SDK method: calls delete/delete-all, campaigns create (CSV) + launch, numbers import/delete/monitor/web-calls, sms campaigns, webhooks, keys rotate, storage/llm/tts. A guard test fails the build if an SDK method has no command.
+- `--set field=value` (repeatable) and `--body @file.json` on every create/update/set - new API fields need no CLI update.
+- `--yes` alias for `--confirm`; every destructive command previews first. `--base-url` for staging. `calls create --wait` polls until the call ends and prints the result. `completion <bash|zsh|pwsh>`. Did-you-mean on mistyped commands.
+- Fixes: `login` uses a visible prompt (the hidden one dropped pasted input on Windows); `mcp setup` no longer writes a `\` env block desktop apps cannot expand - the MCP server reads ~/.nixflex/config.json.
+
 ## 0.7.0
 - New: the `nixflex` CLI ships in this package - `npx nixflex --help`. Agents, calls, numbers, caller context (incl. CSV import), SMS, usage, doctor, `login` (key stored in ~/.nixflex/config.json) and `mcp setup`. Every command takes `--json`; deletes need `--confirm`. Zero dependencies - it calls this SDK. Docs: https://docs.nixflex.com/cli
 

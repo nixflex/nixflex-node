@@ -24,7 +24,7 @@ test('cli: built binary exists and reports the package version', () => {
 test('cli: help lists every command group', () => {
   const r = run(['--help']);
   assert.strictEqual(r.status, 0);
-  for (const g of ['login', 'agents list', 'calls create', 'numbers list', 'callers set', 'callers import', 'sms send', 'mcp setup', 'doctor']) {
+  for (const g of ['login', 'agents list', 'calls create', 'campaigns create', 'numbers list', 'callers set', 'callers import', 'sms send', 'sms campaigns', 'webhooks set', 'keys rotate', 'storage set', 'llm', 'tts', 'mcp setup', 'doctor', 'completion']) {
     assert.ok(r.stdout.includes(g), 'help is missing: ' + g);
   }
 });
@@ -51,4 +51,32 @@ test('cli: --json errors are valid JSON and never crash the process', () => {
 test('cli: package bin points at the built file', () => {
   assert.strictEqual(pkg.bin && pkg.bin.nixflex, './dist/cli/index.js');
   assert.ok(fs.readFileSync(CLI, 'utf8').startsWith('#!/usr/bin/env node'), 'shebang missing - npx nixflex would not run');
+});
+
+// COVERAGE GUARD: every public SDK method must have a CLI command in --help. The CLI is
+// the SDK's mirror; if the SDK grows a method and this fails, add the subcommand + help
+// line + doc row in the same session (the CLI rule).
+test('cli: every SDK method is reachable from the CLI', () => {
+  const resDir = path.join(__dirname, '..', 'src', 'resources');
+  const src = fs.readdirSync(resDir).filter((f) => f.endsWith('.ts')).map((f) => fs.readFileSync(path.join(resDir, f), 'utf8')).join('\n');
+  const groupOf = { Agents: 'agents', Calls: 'calls', Campaigns: 'campaigns', PhoneNumbers: 'numbers', Callers: 'callers', Sms: 'sms', SmsCampaigns: 'sms campaigns', Keys: 'keys', UsageResource: 'usage', Webhooks: 'webhooks', Storage: 'storage', Llm: 'llm', Tts: 'tts' };
+  const rename = { deleteAll: 'delete-all', setMonitor: 'monitor', getMonitor: 'monitor', setWebCalls: 'web-calls', getWebCalls: 'web-calls' };
+  const skip = new Set(['Webhooks.verify']); // local crypto helper, not an API call
+  const help = run(['--help']).stdout;
+  const classes = src.split(/export class /).slice(1);
+  const missing = [];
+  for (const block of classes) {
+    const name = block.split(/\s/)[0];
+    const group = groupOf[name];
+    assert.ok(group, 'new SDK resource "' + name + '" has no CLI group mapping in this test - add it');
+    for (const m of block.matchAll(/^  ([a-zA-Z]+)\(/gm)) {
+      const method = m[1];
+      if (method === 'constructor' || skip.has(name + '.' + method)) continue;
+      const cmd = rename[method] || method;
+      const expect = group === 'usage' ? 'usage' : group + ' ' + cmd;
+      const re = new RegExp('(^|\\s|\\|\\s)' + expect.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\s|$|\\s\\|)', 'm');
+      if (!re.test(help)) missing.push(name + '.' + method + ' -> "' + expect + '"');
+    }
+  }
+  assert.deepStrictEqual(missing, [], 'SDK methods with no CLI command in --help:\n  ' + missing.join('\n  '));
 });
