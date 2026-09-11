@@ -44,6 +44,8 @@ export interface AgentCreateParams {
   silence_hangup_seconds?: number;
   /** Save call audio. Recordings delete after 90 days. Default true. */
   record_call?: boolean;
+  /** Who records when record_call is on. 'provider' = your carrier records (whole call, including after a transfer to a person; carrier recording charges apply). 'nixflex' = the voice engine records the conversation itself at no extra cost; a transfer to a person is not included. Default 'provider'. */
+  recording_source?: 'provider' | 'nixflex';
   /** Carrier answering-machine detection: fast hangup ~4s in, NO voicemail message, extra carrier cost. OFF lets the agent detect voicemail itself and leave a message. Default false. */
   amd_enabled?: boolean;
   /** Keypad digits instead of speech. Three-state: true/false explicit, null = not set (a number's own setting decides). */
@@ -99,6 +101,7 @@ export interface Agent {
   max_call_duration_seconds: number;
   silence_hangup_seconds: number;
   record_call: boolean;
+  recording_source: 'provider' | 'nixflex';
   func_end_call?: boolean;
   transfer_whisper?: string | null;
   func_send_sms?: boolean;

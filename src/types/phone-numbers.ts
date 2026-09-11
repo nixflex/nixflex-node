@@ -48,6 +48,7 @@ export interface PhoneNumber {
   speaking_rate?: number | null;
   dtmf_enabled?: boolean | null;
   record_call?: boolean | null;
+  recording_source?: 'provider' | 'nixflex' | null;
   created_at?: string;
 }
 
@@ -76,6 +77,8 @@ export interface PhoneNumberUpdateParams {
   dtmf_enabled?: boolean | null;
   /** Recording: null = inherit; false stops recording this number while the agent keeps recording. */
   record_call?: boolean | null;
+  /** Who records on this number: 'provider' (carrier) or 'nixflex' (voice engine). null = inherit the agent. Ignored while record_call is off. */
+  recording_source?: 'provider' | 'nixflex' | null;
 }
 
 export interface PhoneNumberListResponse {
