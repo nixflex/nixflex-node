@@ -28,6 +28,8 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import Nixflex, { NixflexError } from '../index.js';
 import { errorOutput } from '../error-output.js';
+import { readNumber } from './number-reads.js';
+import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
 declare const __CLI_VERSION__: string | undefined;
 const VERSION = typeof __CLI_VERSION__ === 'string' ? __CLI_VERSION__ : '0.0.0';
@@ -214,13 +216,17 @@ CAMPAIGNS (voice batch)
   campaigns launch <campaign_id>
 
 NUMBERS
-  numbers list [--agent ID]
+  numbers list [--agent ID] [--provider twilio|telnyx] [--limit N] [--cursor CURSOR]
+  numbers get <number> --json
   numbers import --set phone_number=+44... --set agent_id=ID --set twilio_sid=... --set twilio_token=...
                  (or --set telnyx_api_key=... --set telnyx_connection_id=...)   or --body @number.json
   numbers update <number> [--sms-reply] [--sms-prompt] [--dtmf] [--set k=v ...]
   numbers delete <number> --confirm
   numbers monitor <number> [get|on|off]
   numbers web-calls <number> [get|on|off]
+  Number boolean --set fields: inbound_enabled, outbound_enabled, sms_reply_enabled,
+    web_agent_enabled, web_calls_enabled, web_functions_enabled, monitor_enabled.
+    Website voice also needs Web agent ON. Monitor ON does not attach a listener.
 
 CALLERS (caller context)
   callers get <your_number> <caller_number>
@@ -313,6 +319,7 @@ async function main(): Promise<void> {
     options: {
       json: { type: 'boolean' }, key: { type: 'string' }, 'base-url': { type: 'string' }, help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' },
       confirm: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, limit: { type: 'string' }, status: { type: 'string' },
+      provider: { type: 'string' }, cursor: { type: 'string' },
       set: { type: 'string', multiple: true }, body: { type: 'string' },
       name: { type: 'string' }, prompt: { type: 'string' }, voice: { type: 'string' }, language: { type: 'string' }, 'incall-sms': { type: 'string' },
       agent: { type: 'string' }, to: { type: 'string' }, from: { type: 'string' }, var: { type: 'string', multiple: true }, message: { type: 'string' },
@@ -444,7 +451,7 @@ async function main(): Promise<void> {
 
   // --- numbers ---
   if (group === 'numbers') {
-    if (cmd === 'list') { const r = await client.phoneNumbers.list(s('agent') ? { agent_id: s('agent') } : {}); out(JSON_MODE ? r : (r as { phone_numbers: unknown[] }).phone_numbers); return; }
+    if (cmd === 'list' || cmd === 'get') { out(await readNumber(client, cmd, a1, s, JSON_MODE)); return; }
     if (cmd === 'import') {
       const body = bodyFrom(values);
       if (!body.phone_number || !body.agent_id) fail('numbers import --set phone_number=+44... --set agent_id=ID --set <carrier credentials>   (or --body @number.json)');
@@ -454,7 +461,7 @@ async function main(): Promise<void> {
       if (!a1) fail('numbers update <number> [flags] [--set k=v ...]');
       const body = bodyFrom(values, { sms_reply_enabled: boolOrNull(s('sms-reply')), sms_prompt: s('sms-prompt') === undefined ? undefined : (s('sms-prompt') === 'null' ? null : textOrFile(s('sms-prompt'))), dtmf_enabled: boolOrNull(s('dtmf')) });
       if (Object.keys(body).length === 0) fail('nothing to update - pass a flag or --set field=value');
-      out(await client.phoneNumbers.update(a1, body as never)); return;
+      out(await client.phoneNumbers.update(a1, body as PhoneNumberUpdateParams)); return;
     }
     if (cmd === 'delete') {
       if (!a1) fail('numbers delete <number> --confirm');
@@ -472,7 +479,7 @@ async function main(): Promise<void> {
       }
       fail('numbers ' + cmd + ' <number> [get|on|off]');
     }
-    fail('numbers: list | import | update | delete | monitor | web-calls');
+    fail('numbers: list | get | import | update | delete | monitor | web-calls');
   }
 
   // --- callers (caller context) ---

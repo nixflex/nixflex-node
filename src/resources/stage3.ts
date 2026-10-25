@@ -4,7 +4,7 @@
 import type { HttpClient, RequestOptions } from '../client.js';
 import type {
   PhoneNumber, PhoneNumberImportParams, PhoneNumberUpdateParams,
-  PhoneNumberListResponse, PhoneNumberDeleteResponse,
+  PhoneNumberListResponse, PhoneNumberListParams, PhoneNumberDetails, PhoneNumberDeleteResponse,
   MonitorToggleResponse, WebCallsToggleResponse,
 } from '../types/phone-numbers.js';
 
@@ -24,10 +24,15 @@ export class PhoneNumbers {
     return this.http.request('POST', '/phone-numbers', params, undefined, opts);
   }
 
-  /** All numbers on your account (optionally one agent's), newest first.
-   * Not paginated - returns up to 1,000; filter by agent_id above that. */
-  list(params: { agent_id?: string } = {}, opts?: RequestOptions): Promise<PhoneNumberListResponse> {
-    return this.http.request('GET', '/phone-numbers', undefined, { agent_id: params.agent_id }, opts);
+  /** Owned public numbers, newest first. Opt into paging with limit/cursor.
+   * count is returned rows. Without paging, the server's row cap still applies. */
+  list(params: PhoneNumberListParams = {}, opts?: RequestOptions): Promise<PhoneNumberListResponse> {
+    return this.http.request('GET', '/phone-numbers', undefined, { agent_id: params.agent_id, provider: params.provider, limit: params.limit, cursor: params.cursor }, opts);
+  }
+
+  /** Saved safe settings, effective website voice switch, and safe key status. */
+  get(phoneNumber: string, opts?: RequestOptions): Promise<{ phone_number: PhoneNumberDetails }> {
+    return this.http.request('GET', `/phone-numbers/${enc(phoneNumber)}`, undefined, undefined, opts);
   }
 
   /** Update per-number settings. Send ONLY what changes (empty body is

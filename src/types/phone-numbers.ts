@@ -20,6 +20,8 @@ export interface PhoneNumberImportParams {
   telnyx_api_key?: string;
   /** Your TeXML Application ID. Telnyx import. */
   telnyx_connection_id?: string;
+  /** Optional Telnyx signature public-key candidate; saving does not verify it. */
+  telnyx_public_key?: string;
   /** Per-number prompt override, max 8000 chars. */
   custom_prompt?: string;
 }
@@ -55,6 +57,55 @@ export interface PhoneNumber {
   record_call?: boolean | null;
   recording_source?: 'provider' | 'nixflex' | null;
   created_at?: string;
+  /** Descriptive origin only, never permission or a writable setting. */
+  readonly source?: 'api' | 'dashboard' | null;
+}
+
+export interface TelnyxKeyStatus {
+  provider: string | null;
+  set: boolean;
+  verified: boolean;
+  fingerprint: string | null;
+  previousKeyAcceptedUntil: string | null;
+}
+
+/** GET returns saved overrides (null stays null), not inherited agent settings. */
+export interface PhoneNumberDetails {
+  phone_number: string;
+  agent_id: string | null;
+  provider: 'twilio' | 'telnyx' | null;
+  readonly source: 'api' | 'dashboard' | null;
+  created_at: string | null;
+  inbound_enabled: boolean | null;
+  outbound_enabled: boolean | null;
+  sms_reply_enabled: boolean | null;
+  web_agent_enabled: boolean | null;
+  web_calls_enabled: boolean | null;
+  web_functions_enabled: boolean | null;
+  monitor_enabled: boolean | null;
+  custom_prompt: string | null;
+  sms_prompt: string | null;
+  web_prompt: string | null;
+  voice_id: string | null;
+  speaking_rate: number | null;
+  dtmf_enabled: boolean | null;
+  require_booking_confirmation: boolean | null;
+  record_call: boolean | null;
+  recording_source: 'provider' | 'nixflex' | null;
+  voicemail_leave_enabled: boolean | null;
+  voicemail_message: string | null;
+  /** Website voice switch eligibility only; active/billing checks still apply. */
+  readonly web_calls_effective: boolean;
+  readonly telnyx_key_status: TelnyxKeyStatus;
+}
+
+export interface PhoneNumberListParams {
+  agent_id?: string;
+  provider?: 'twilio' | 'telnyx';
+  /** Opt into paging, 1..100. With cursor alone defaults to 50. */
+  limit?: number;
+  /** Opaque cursor from next_cursor; keep account and filters unchanged. */
+  cursor?: string;
 }
 
 /** Every field optional - send only what changes; omitted fields are untouched.
@@ -98,7 +149,11 @@ export interface PhoneNumberUpdateParams {
 
 export interface PhoneNumberListResponse {
   phone_numbers: PhoneNumber[];
+  /** Rows returned, NOT the account total. */
   count: number;
+  /** Present only when limit/cursor opts into paging. */
+  next_cursor?: string | null;
+  has_more?: boolean;
 }
 
 export interface PhoneNumberDeleteResponse {

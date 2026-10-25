@@ -112,6 +112,27 @@ Both are immediate and irreversible — fetch anything you need to keep first.
 
 ## Docs
 
+### Local unpublished Group 2: number reads
+
+`client.phoneNumbers.get(number)` reads all safe saved settings, `source`,
+`web_calls_effective` and `telnyx_key_status`. No credentials/internal IDs.
+`phoneNumbers.list({agent_id, provider, limit, cursor})` opts into paging with
+limit/cursor; count remains returned rows. Follow next_cursor until null, keeping
+account/filters unchanged. Legacy list and dedicated monitor/web-calls methods stay.
+
+All seven PATCH switches are typed booleans: `inbound_enabled`, `outbound_enabled`,
+`sms_reply_enabled`, `web_agent_enabled`, `web_calls_enabled`,
+`web_functions_enabled`, `monitor_enabled`. Website voice needs Web agent ON;
+the saved voice switch is not erased when Web agent is OFF. Effective eligibility
+does not bypass active-account/agent/billing checks. Website custom functions
+are public to visitors when enabled (default OFF). Monitoring eligibility alone
+does not attach a listener or incur its premium. `source` is descriptive/read-only.
+
+CLI: `numbers get +12025550100 --json`; `numbers list --limit 1 --provider telnyx --json`.
+Use `numbers update <number> --set web_agent_enabled=true` (and the other boolean
+names above); omitted fields remain unchanged. Existing commands still work.
+These are local additions, not a new npm publication.
+
 Full API reference: **https://docs.nixflex.com**
 
 Release history: [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE).
