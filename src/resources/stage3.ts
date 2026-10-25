@@ -2,6 +2,8 @@
 // src/resources/phone-numbers.ts
 // ============================================
 import type { HttpClient, RequestOptions } from '../client.js';
+import { readNumberUsage } from './number-usage.js';
+import type { NumberUsageParams, NumberUsageResponse } from '../types/number-usage.js';
 import type {
   PhoneNumber, PhoneNumberImportParams, PhoneNumberUpdateParams,
   PhoneNumberListResponse, PhoneNumberListParams, PhoneNumberDetails, PhoneNumberDeleteResponse,
@@ -15,6 +17,11 @@ function enc(phoneNumber: string): string {
 
 export class PhoneNumbers {
   constructor(private readonly http: HttpClient) {}
+
+  /** Retained-history usage, not a billing ledger. Defaults: all, UTC. */
+  usage(phoneNumber: string, params: NumberUsageParams = {}, opts?: RequestOptions): Promise<NumberUsageResponse> {
+    return readNumberUsage(this.http, phoneNumber, params, opts);
+  }
 
   /** Attach a number you already own. Carrier inferred from credentials
    * (twilio_sid+twilio_token OR telnyx_api_key+telnyx_connection_id).

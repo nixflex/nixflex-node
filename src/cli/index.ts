@@ -29,6 +29,7 @@ import { createInterface } from 'node:readline';
 import Nixflex, { NixflexError } from '../index.js';
 import { errorOutput } from '../error-output.js';
 import { readNumber } from './number-reads.js';
+import { numberUsage } from './number-usage.js';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
 declare const __CLI_VERSION__: string | undefined;
@@ -217,6 +218,7 @@ CAMPAIGNS (voice batch)
 
 NUMBERS
   numbers list [--agent ID] [--provider twilio|telnyx] [--limit N] [--cursor CURSOR]
+  numbers usage <number> [--period today|7|14|30|90|all] [--time-zone Europe/London]
   numbers get <number> --json
   numbers import --set phone_number=+44... --set agent_id=ID --set twilio_sid=... --set twilio_token=...
                  (or --set telnyx_api_key=... --set telnyx_connection_id=...)   or --body @number.json
@@ -320,6 +322,7 @@ async function main(): Promise<void> {
       json: { type: 'boolean' }, key: { type: 'string' }, 'base-url': { type: 'string' }, help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' },
       confirm: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, limit: { type: 'string' }, status: { type: 'string' },
       provider: { type: 'string' }, cursor: { type: 'string' },
+      period: { type: 'string' }, 'time-zone': { type: 'string' },
       set: { type: 'string', multiple: true }, body: { type: 'string' },
       name: { type: 'string' }, prompt: { type: 'string' }, voice: { type: 'string' }, language: { type: 'string' }, 'incall-sms': { type: 'string' },
       agent: { type: 'string' }, to: { type: 'string' }, from: { type: 'string' }, var: { type: 'string', multiple: true }, message: { type: 'string' },
@@ -451,6 +454,7 @@ async function main(): Promise<void> {
 
   // --- numbers ---
   if (group === 'numbers') {
+    if (cmd === 'usage') { out(await numberUsage(client, a1, s)); return; }
     if (cmd === 'list' || cmd === 'get') { out(await readNumber(client, cmd, a1, s, JSON_MODE)); return; }
     if (cmd === 'import') {
       const body = bodyFrom(values);
@@ -479,7 +483,7 @@ async function main(): Promise<void> {
       }
       fail('numbers ' + cmd + ' <number> [get|on|off]');
     }
-    fail('numbers: list | get | import | update | delete | monitor | web-calls');
+    fail('numbers: list | get | usage | import | update | delete | monitor | web-calls');
   }
 
   // --- callers (caller context) ---
