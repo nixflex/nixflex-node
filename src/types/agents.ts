@@ -7,23 +7,51 @@
 
 export type ResponseLength = 'short' | 'medium' | 'long';
 export type TransferType = 'cold' | 'warm';
+export type AgentRetentionDays = 90 | 30 | 7 | 1 | 0;
+export interface AgentExtractionField {
+  name: string;
+  type: 'text' | 'selector' | 'boolean' | 'number';
+  description?: string;
+  optional?: boolean;
+  format_example?: string;
+  choices?: string[];
+}
+export interface AgentContractSettings {
+  voice_key?: string | null;
+  timezone?: string;
+  /** Confidence 0-1; silence in whole milliseconds, including 0. */
+  stt_confidence?: number;
+  stt_max_silence_ms?: number;
+  incall_sms_enabled?: boolean;
+  post_call_sms_enabled?: boolean;
+  post_call_sms_template?: string;
+  data_extraction_fields?: AgentExtractionField[];
+  wait_tag_seconds?: number | null;
+  ivr_timeout_seconds?: number;
+  remember_callers?: boolean;
+  require_booking_confirmation?: boolean;
+  /** Legacy agent number/model settings, not a number import or model selection. */
+  phone_number?: string | null;
+  llm_model?: string;
+}
+export interface AgentWarning { code: 'unknown_fields'; fields: string[]; message: string; }
 
 /** Parameters for creating an agent. Every field is optional - the API has
  * sensible defaults for all of them. `name` is the only one recommended. */
-export interface AgentCreateParams {
-  /** Display name (max 100 chars). Default "Untitled Agent". */
+export interface AgentCreateParams extends AgentContractSettings {
+  /** Display name (max 200 chars). Default "Untitled Agent". */
   name?: string;
   /** The AI's instructions (max 16000 chars ~ 4000 tokens). Over-limit is rejected with `prompt_too_long`. */
   system_prompt?: string;
   /** First line spoken on inbound calls. */
   welcome_message?: string;
   /** Voice name (browse in the dashboard). Default "Ashley". */
-  voice_id?: string;
+  voice_id?: string | null;
   /** Language code, or "multi" (follows the caller across 10 languages). Arabic, Hebrew, Korean, Chinese and Polish need their own code. */
   language?: string;
   /** Set false to disable without deleting. */
   is_active?: boolean;
-  /** AI temperature 0-1. Default 0.3. */
+  /** AI temperature 0-0.7. Explicit 0 is preserved; omitted defaults to 0.3. */
   temperature?: number;
   response_length?: ResponseLength;
   /** Agent greets the caller immediately. Default true. */
@@ -35,14 +63,14 @@ export interface AgentCreateParams {
   /** Milliseconds the agent waits after the caller stops speaking, 0-1000. Default 200. */
   response_eagerness?: number;
   /** Comma-separated words STT might mishear (staff names, treatments). Keep under 50 - too many are rejected at transcription time. */
-  boosted_keywords?: string;
-  /** Seconds the agent waits after pickup before speaking, 5-30. Default 10. */
+  boosted_keywords?: string | null;
+  /** Legacy pickup setting. This contract release does not change its handling or default (10). */
   pickup_delay?: number;
-  /** Hard cap on call length, 60-1800 seconds. Default 600. */
-  max_call_duration_seconds?: number;
-  /** Hang up if the caller is silent this long, 5-45 seconds. Default 30. */
-  silence_hangup_seconds?: number;
-  /** Save call audio. Recordings delete after 90 days. Default true. */
+  /** Positive whole seconds; omitted create default 600. null uses the existing runtime fallback. */
+  max_call_duration_seconds?: number | null;
+  /** Positive whole seconds; omitted create default 30. null uses the existing runtime fallback. */
+  silence_hangup_seconds?: number | null;
+  /** Save call audio. Retention inherits the account default on create. Default true. */
   record_call?: boolean;
   /** Who records when record_call is on. 'provider' = your carrier records (whole call, including after a transfer to a person; carrier recording charges apply). 'nixflex' = the voice engine records the conversation itself at no extra cost; a transfer to a person is not included. Default 'provider'. */
   recording_source?: 'provider' | 'nixflex';
@@ -58,11 +86,11 @@ export interface AgentCreateParams {
   voicemail_message?: string | null;
   /** Where to POST post-call data. */
   webhook_url?: string | null;
-  /** Agent can end the call cleanly. Default true. */
+  /** Enables duration/silence end-call timers; not an absolute model END_CALL prohibition. Default true. */
   func_end_call?: boolean;
   /** Warm-transfer briefing text. Empty = AI auto-generates from the conversation. */
   transfer_whisper?: string | null;
-  /** NOT ENFORCED - accepted and returned, but the engine does not read it. Control texting in your prompt. */
+  /** Legacy, not enforced. Use incall_sms_enabled for the actual texting permission. */
   func_send_sms?: boolean;
   /** NOT ENFORCED - same as func_send_sms. Transfers are controlled by your prompt and transfer_number. */
   func_cold_transfer?: boolean;
@@ -75,22 +103,21 @@ export interface AgentCreateParams {
   speaking_rate?: number | null;
   /** Greet recognised returning callers by name. Default true. */
   greet_by_name?: boolean;
-  /** Said when transcription fails. */
+  /** Legacy compatibility field; not a configurable runtime fallback. */
   fallback_message?: string;
 }
 
-/** Update accepts any create field; omitted fields keep their values.
- * Unrecognised field names return 200 and change NOTHING - check spelling
- * against the docs if a setting is not taking effect. */
-export type AgentUpdateParams = AgentCreateParams;
+/** Empty/unknown-only updates fail. Mixed unknown keys return warnings.
+ * Omitted fields keep their values; retention is update-only. */
+export interface AgentUpdateParams extends AgentCreateParams { call_retention_days?: AgentRetentionDays; }
 
 /** The agent object as the API returns it. */
-export interface Agent {
+export interface Agent extends Omit<AgentContractSettings, 'post_call_sms_template'> {
   agent_id: string;
   name: string;
   system_prompt: string;
   welcome_message: string;
-  voice_id: string;
+  voice_id: string | null;
   language: string;
   temperature: number;
   response_length?: ResponseLength;
@@ -98,8 +125,8 @@ export interface Agent {
   dynamic_greeting?: boolean;
   interruption_sensitivity?: number;
   pickup_delay?: number;
-  max_call_duration_seconds: number;
-  silence_hangup_seconds: number;
+  max_call_duration_seconds: number | null;
+  silence_hangup_seconds: number | null;
   record_call: boolean;
   recording_source: 'provider' | 'nixflex';
   func_end_call?: boolean;
@@ -122,15 +149,18 @@ export interface Agent {
   post_call_sms_template?: string | null;
   voicemail_leave_enabled?: boolean;
   voicemail_message?: string | null;
-  data_extraction_fields?: unknown[];
+  data_extraction_fields?: AgentExtractionField[];
+  call_retention_days?: AgentRetentionDays;
+  warnings?: AgentWarning[];
+  response_eagerness?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface AgentDeleteResponse {
-  agent_id: string;
-  deleted: boolean;
+  /** Legacy message "Agent deleted" means soft disable, NOT permanent erasure. */
+  message: string;
 }
 
 export interface ListParams {

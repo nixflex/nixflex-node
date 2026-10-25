@@ -36,14 +36,13 @@ export class Agents {
 
   /** Update an agent. Send ONLY the fields you want to change - omitted fields
    * keep their values. Active calls are unaffected; new calls use the new config.
-   * Unknown field names return 200 and change nothing - check spelling. */
+   * Empty/unknown-only updates fail; mixed unknown keys return warnings. */
   update(agentId: string, params: AgentUpdateParams, opts?: RequestOptions): Promise<Agent> {
     return this.http.request<Agent>('PUT', `/agents/${encodeURIComponent(agentId)}`, params, undefined, opts);
   }
 
-  /** PERMANENTLY delete an agent. Attached numbers detach and stop routing;
-   * historical calls stay accessible. To disable without losing setup, use
-   * update(agentId, { is_active: false }) instead. */
+  /** Soft disable only (is_active=false). Does not detach numbers or erase history.
+   * The legacy response message is "Agent deleted". */
   delete(agentId: string, opts?: RequestOptions): Promise<AgentDeleteResponse> {
     return this.http.request<AgentDeleteResponse>('DELETE', `/agents/${encodeURIComponent(agentId)}`, undefined, undefined, opts);
   }
