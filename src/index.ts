@@ -18,7 +18,7 @@ import { Calls, Campaigns } from './resources/calls.js';
 import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage, Llm, Tts } from './resources/stage3.js';
 import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
-import { errorFromResponse } from './errors.js';
+import { createKey } from './key-create.js';
 
 export class Nixflex {
   /** AI agents - create, list, get, update, delete. */
@@ -66,18 +66,7 @@ export class Nixflex {
    * developers use the dashboard instead). The key_secret is shown ONCE.
    * Rate-limited per IP to prevent abuse. */
   static async createKey(params: { name?: string; email?: string } = {}, baseUrl = 'https://api.nixflex.com'): Promise<KeyCreateResponse> {
-    const res = await fetch(baseUrl.replace(/\/+$/, '') + '/v1/keys', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
-    });
-    const body = await res.json();
-    if (!res.ok) {
-      // (static import - a dynamic import here broke the dts build)
-      throw errorFromResponse(res.status, body, res.headers.get('x-railway-request-id') || undefined,
-        parseInt(res.headers.get('retry-after') || '0', 10) || 0);
-    }
-    return body as KeyCreateResponse;
+    return createKey(params, baseUrl);
   }
 }
 

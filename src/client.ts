@@ -3,17 +3,16 @@
 // The core HTTP client every resource uses. Industry-standard behaviours:
 //  - Bearer auth (key_id:key_secret - the documented Nixflex scheme)
 //  - Per-request timeout (default 30s) via AbortController
-//  - AUTOMATIC RETRY: 429 honours the API's Retry-After header (the API
-//    really sends it - built and live-proven Aug 2026); 5xx and network
-//    failures retry once with backoff. GET/DELETE always retry; POST/PUT/
-//    PATCH retry ONLY on 429/network-before-send (never after a 5xx, which
-//    may have already acted - no double calls, no double sends).
+//  - Only GET reads retry, with bounded backoff. Changes never retry,
+//    including DELETE, 429, network failures and lost/malformed replies.
+//    An uncertain change reports outcome unknown: check before retrying.
 //  - Typed errors (see errors.ts), request-id surfaced for support.
 //  - Zero runtime dependencies: native fetch (Node 18+).
 // ============================================
 
 import {
   NixflexConnectionError,
+  NixflexOutcomeUnknownError,
   errorFromResponse,
   type NixflexAPIErrorBody,
 } from './errors.js';
@@ -25,7 +24,7 @@ export interface NixflexClientOptions {
   baseUrl?: string;
   /** Per-request timeout in milliseconds. Default 30000. */
   timeoutMs?: number;
-  /** Max automatic retries for retryable failures. Default 1. Set 0 to disable. */
+  /** Max automatic GET retries. Changes never retry. Default 1; 0 disables. */
   maxRetries?: number;
 }
 
@@ -73,9 +72,7 @@ export class HttpClient {
       }
     }
 
-    // Mutating verbs must not blind-retry after a 5xx (the call/SMS may have
-    // fired). 429 is always safe to retry - the API rejected it untouched.
-    const isIdempotent = method === 'GET' || method === 'DELETE';
+    const isRead = method === 'GET';
     let attempt = 0;
 
     // eslint-disable-next-line no-constant-condition
@@ -85,7 +82,8 @@ export class HttpClient {
       try {
         res = await this.fetchWithTimeout(url.toString(), method, body, reqOpts);
       } catch (err) {
-        // Network failure before any response - safe to retry for all verbs.
+        // No response does NOT prove that the server received nothing.
+        if (!isRead) throw new NixflexOutcomeUnknownError();
         if (attempt <= this.maxRetries) {
           await sleep(300 * attempt);
           continue;
@@ -97,7 +95,12 @@ export class HttpClient {
 
       if (res.ok) {
         if (res.status === 204) return undefined as T;
-        return (await res.json()) as T;
+        try { return (await res.json()) as T; }
+        catch {
+          if (!isRead) throw new NixflexOutcomeUnknownError(res.status, null,
+            res.headers.get('x-railway-request-id') || undefined);
+          throw new NixflexConnectionError('The API read returned an incomplete or invalid JSON reply.');
+        }
       }
 
       const requestId = res.headers.get('x-railway-request-id') || undefined;
@@ -106,15 +109,15 @@ export class HttpClient {
       try { errBody = (await res.json()) as NixflexAPIErrorBody; } catch { /* non-JSON error body */ }
 
       const retryable429 = res.status === 429;
-      const retryable5xx = res.status >= 500 && isIdempotent;
-      if ((retryable429 || retryable5xx) && attempt <= this.maxRetries) {
+      const retryable5xx = res.status >= 500;
+      if (isRead && (retryable429 || retryable5xx) && attempt <= this.maxRetries) {
         // Honour Retry-After on 429 (capped 30s); small backoff otherwise.
         const waitMs = retryable429 ? Math.min(retryAfter, 30) * 1000 || 1000 : 500 * attempt;
         await sleep(waitMs);
         continue;
       }
 
-      throw errorFromResponse(res.status, errBody, requestId, retryAfter);
+      throw errorFromResponse(res.status, errBody, requestId, retryAfter, !isRead);
     }
   }
 
@@ -134,6 +137,7 @@ export class HttpClient {
     try {
       return await fetch(url, {
         method,
+        redirect: method === 'GET' ? 'follow' : 'error',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',

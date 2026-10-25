@@ -27,8 +27,8 @@ export interface PhoneNumberImportParams {
 export interface PhoneNumber {
   phone_number: string;
   agent_id: string;
-  /** 'twilio' or 'telnyx'. */
-  provider: string;
+  /** 'twilio' or 'telnyx'; absent from current Twilio-import/PATCH replies. */
+  provider?: string;
   /** Twilio numbers only; null on other carriers. */
   twilio_number_sid?: string | null;
   telnyx_number_id?: string | null;
@@ -47,14 +47,29 @@ export interface PhoneNumber {
   web_prompt?: string | null;
   speaking_rate?: number | null;
   dtmf_enabled?: boolean | null;
+  require_booking_confirmation?: boolean | null;
+  monitor_enabled?: boolean;
+  web_calls_enabled?: boolean;
+  web_agent_enabled?: boolean;
+  web_functions_enabled?: boolean;
   record_call?: boolean | null;
   recording_source?: 'provider' | 'nixflex' | null;
   created_at?: string;
 }
 
 /** Every field optional - send only what changes; omitted fields are untouched.
- * An EMPTY body is rejected. null clears a field (falls back to the agent). */
+ * An EMPTY body is rejected. Only nullable fields accept null; see each field. */
 export interface PhoneNumberUpdateParams {
+  inbound_enabled?: boolean;
+  outbound_enabled?: boolean;
+  monitor_enabled?: boolean;
+  web_calls_enabled?: boolean;
+  web_agent_enabled?: boolean;
+  /** Website visitors may use all enabled custom functions. Default OFF. */
+  web_functions_enabled?: boolean;
+  /** Telnyx webhook public-key candidate; saving it does not verify it. */
+  telnyx_public_key?: string;
+  require_booking_confirmation?: boolean | null;
   /** Business profile layered on the agent prompt for CALLS only. Max 8000. null clears. */
   custom_prompt?: string | null;
   /** Voice override for this number. null falls back to the agent's voice. */

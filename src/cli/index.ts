@@ -27,6 +27,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import Nixflex, { NixflexError } from '../index.js';
+import { errorOutput } from '../error-output.js';
 
 declare const __CLI_VERSION__: string | undefined;
 const VERSION = typeof __CLI_VERSION__ === 'string' ? __CLI_VERSION__ : '0.0.0';
@@ -214,7 +215,7 @@ CAMPAIGNS (voice batch)
 
 NUMBERS
   numbers list [--agent ID]
-  numbers import --set phone_number=+44... --set agent_id=ID --set twilio_account_sid=... --set twilio_auth_token=...
+  numbers import --set phone_number=+44... --set agent_id=ID --set twilio_sid=... --set twilio_token=...
                  (or --set telnyx_api_key=... --set telnyx_connection_id=...)   or --body @number.json
   numbers update <number> [--sms-reply] [--sms-prompt] [--dtmf] [--set k=v ...]
   numbers delete <number> --confirm
@@ -466,7 +467,7 @@ async function main(): Promise<void> {
       const isMon = cmd === 'monitor';
       if (action === 'get') { out(isMon ? await client.phoneNumbers.getMonitor(a1) : await client.phoneNumbers.getWebCalls(a1)); return; }
       if (action === 'on' || action === 'off') {
-        if (isMon && action === 'on') note('note: monitoring bills this number\'s inbound calls at the premium rate');
+        if (isMon && action === 'on') note('note: enabling is free; the listening premium applies only when a live listener actually attaches to a call');
         out(isMon ? await client.phoneNumbers.setMonitor(a1, action === 'on') : await client.phoneNumbers.setWebCalls(a1, action === 'on')); return;
       }
       fail('numbers ' + cmd + ' <number> [get|on|off]');
@@ -566,7 +567,7 @@ async function main(): Promise<void> {
 
 main().catch((e: unknown) => {
   if (e instanceof NixflexError) {
-    if (JSON_MODE) process.stdout.write(JSON.stringify({ error: { code: e.code, status: e.status, message: e.message, doc_url: e.docUrl } }, null, 2) + '\n');
+    if (JSON_MODE) process.stdout.write(JSON.stringify(errorOutput(e), null, 2) + '\n');
     else process.stderr.write('error ' + (e.status || '') + ' ' + (e.code || '') + ': ' + e.message + (e.docUrl ? '\n  ' + e.docUrl : '') + '\n');
     // exitCode, not exit(): exit() before stdout has flushed crashes Node on Windows (UV_HANDLE_CLOSING).
     process.exitCode = 1;

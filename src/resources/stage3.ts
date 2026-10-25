@@ -45,7 +45,8 @@ export class PhoneNumbers {
   }
 
   /** Turn live call monitoring on/off for a number (off by default).
-   * NOTE: enabling bills that number's inbound calls at $0.09/min. */
+   * Enabling alone is free. The listening premium applies only when a live
+   * listener actually attaches to the call (inbound or outbound). */
   setMonitor(phoneNumber: string, enabled: boolean, opts?: RequestOptions): Promise<MonitorToggleResponse> {
     return this.http.request('PUT', `/integrations/monitor/number/${enc(phoneNumber)}`, { enabled }, undefined, opts);
   }
@@ -56,8 +57,8 @@ export class PhoneNumbers {
   }
 
   /** Enable/disable browser (web) calls for a number (off by default).
-   * NOTE: enabling bills that number's calls at $0.09/min (same rule as
-   * Live Monitor - either on means 0.09, both on is still 0.09). */
+   * Enabling alone is free. Premium applies to actual browser calls,
+   * not ordinary phone calls just because this switch is enabled. */
   setWebCalls(phoneNumber: string, enabled: boolean, opts?: RequestOptions): Promise<WebCallsToggleResponse> {
     return this.http.request('PUT', `/integrations/web-calls/number/${enc(phoneNumber)}`, { enabled }, undefined, opts);
   }

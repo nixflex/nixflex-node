@@ -69,7 +69,7 @@ try {
 
 ## Built in
 
-- **Automatic retries** — 429s retried honouring `Retry-After`; network failures retried; POST never blind-retries a 5xx (no double dials)
+- **Read-only retries** — GET retries are bounded and honour `Retry-After`. POST/PUT/PATCH/DELETE never repeat automatically, including 429, network failures and 5xx. A lost or malformed change reply raises `NixflexOutcomeUnknownError` (`outcome: 'unknown'`, `safe_to_retry: false`): check the result before retrying. This local change is not published yet.
 - **Pagination iterators** — `for await (const call of client.calls.iter()) { ... }`
 - **TypeScript types for every request and response** — generated from the [API docs](https://docs.nixflex.com)
 - **Timeouts + AbortSignal support** per client or per request

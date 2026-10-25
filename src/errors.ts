@@ -86,7 +86,7 @@ export class NixflexInvalidRequestError extends NixflexError {
   }
 }
 
-/** 5xx - something failed on Nixflex's side. Retried automatically once. */
+/** 5xx - something failed on Nixflex's side. Only reads may retry. */
 export class NixflexServerError extends NixflexError {
   constructor(...args: ConstructorParameters<typeof NixflexError>) {
     super(...args);
@@ -102,13 +102,36 @@ export class NixflexConnectionError extends NixflexError {
   }
 }
 
+/** A change may have reached the server. Never automatically repeat it. */
+export class NixflexOutcomeUnknownError extends NixflexServerError {
+  readonly outcome = 'unknown' as const;
+  readonly safe_to_retry = false;
+  constructor(status = 0, body: NixflexAPIErrorBody | null = null, requestId?: string) {
+    super(status, { error: {
+      type: 'outcome_unknown', code: 'outcome_unknown',
+      message: 'Outcome unknown - check before retrying. The change may already have happened; it was not automatically repeated.',
+      doc_url: body?.error?.doc_url,
+      details: { ...body?.error?.details, original_code: body?.error?.code,
+        outcome: 'unknown', safe_to_retry: false },
+    } }, requestId);
+    this.name = 'NixflexOutcomeUnknownError';
+  }
+}
+
 /** Map a status + body to the right error class. */
 export function errorFromResponse(
   status: number,
   body: NixflexAPIErrorBody | null,
   requestId: string | undefined,
-  retryAfterSeconds: number
+  retryAfterSeconds: number,
+  mutation = false
 ): NixflexError {
+  const proof = body?.error?.details;
+  const notSent = proof?.outcome === 'not_sent' && proof.sent === false &&
+    proof.charged === false && proof.safe_to_retry === true;
+  if (mutation && (status >= 500 || (status >= 300 && status < 400)) && !notSent) {
+    return new NixflexOutcomeUnknownError(status, body, requestId);
+  }
   if (status === 401) return new NixflexAuthenticationError(status, body, requestId);
   if (status === 402) return new NixflexPaymentRequiredError(status, body, requestId);
   if (status === 404) return new NixflexNotFoundError(status, body, requestId);
