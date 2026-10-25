@@ -19,6 +19,7 @@ import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage, Llm, Tts } f
 import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { createKey } from './key-create.js';
+export type { PhoneNumberMoveParams, PhoneNumberMoveResponse } from './resources/number-move.js';
 
 export class Nixflex {
   /** AI agents - create, list, get, update, delete. */

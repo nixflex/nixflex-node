@@ -30,6 +30,7 @@ import Nixflex, { NixflexError } from '../index.js';
 import { errorOutput } from '../error-output.js';
 import { readNumber } from './number-reads.js';
 import { numberUsage } from './number-usage.js';
+import { numberMove } from './number-move.js';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
 declare const __CLI_VERSION__: string | undefined;
@@ -223,6 +224,7 @@ NUMBERS
   numbers import --set phone_number=+44... --set agent_id=ID --set twilio_sid=... --set twilio_token=...
                  (or --set telnyx_api_key=... --set telnyx_connection_id=...)   or --body @number.json
   numbers update <number> [--sms-reply] [--sms-prompt] [--dtmf] [--set k=v ...]
+  numbers move <number> --agent ID   (also: numbers update <number> --agent ID)
   numbers delete <number> --confirm
   numbers monitor <number> [get|on|off]
   numbers web-calls <number> [get|on|off]
@@ -454,6 +456,7 @@ async function main(): Promise<void> {
 
   // --- numbers ---
   if (group === 'numbers') {
+    if (cmd === 'move' || (cmd === 'update' && s('agent') !== undefined)) { out(await numberMove(client,a1,s('agent'),bodyFrom(values,{sms_reply_enabled:boolOrNull(s('sms-reply')),sms_prompt:s('sms-prompt'),dtmf_enabled:boolOrNull(s('dtmf'))}))); return; }
     if (cmd === 'usage') { out(await numberUsage(client, a1, s)); return; }
     if (cmd === 'list' || cmd === 'get') { out(await readNumber(client, cmd, a1, s, JSON_MODE)); return; }
     if (cmd === 'import') {

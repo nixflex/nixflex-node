@@ -3,6 +3,7 @@
 // ============================================
 import type { HttpClient, RequestOptions } from '../client.js';
 import { readNumberUsage } from './number-usage.js';
+import { moveNumber, type PhoneNumberMoveParams, type PhoneNumberMoveResponse } from './number-move.js';
 import type { NumberUsageParams, NumberUsageResponse } from '../types/number-usage.js';
 import type {
   PhoneNumber, PhoneNumberImportParams, PhoneNumberUpdateParams,
@@ -45,8 +46,16 @@ export class PhoneNumbers {
   /** Update per-number settings. Send ONLY what changes (empty body is
    * rejected). null clears/inherits - see each field's JSDoc; speaking_rate
    * null INHERITS the agent's speed (send 1, not null, to force normal). */
-  update(phoneNumber: string, params: PhoneNumberUpdateParams, opts?: RequestOptions): Promise<{ phone_number: PhoneNumber }> {
+  update(phoneNumber: string, params: PhoneNumberMoveParams, opts?: RequestOptions): Promise<PhoneNumberMoveResponse>;
+  update(phoneNumber: string, params: PhoneNumberUpdateParams, opts?: RequestOptions): Promise<{ phone_number: PhoneNumber }>;
+  update(phoneNumber: string, params: PhoneNumberUpdateParams | PhoneNumberMoveParams, opts?: RequestOptions): Promise<{ phone_number: PhoneNumber } | PhoneNumberMoveResponse> {
+    if ('agent_id' in params) return moveNumber(this.http, phoneNumber, params, opts);
     return this.http.request('PATCH', `/phone-numbers/${enc(phoneNumber)}`, params, undefined, opts);
+  }
+
+  /** Same-account move; busy work is refused. Own number settings and history stay. */
+  move(phoneNumber: string, agentId: string, opts?: RequestOptions): Promise<PhoneNumberMoveResponse> {
+    return moveNumber(this.http, phoneNumber, { agent_id: agentId }, opts);
   }
 
   /** Disconnect from Nixflex (clears carrier webhooks + our record). Does NOT
