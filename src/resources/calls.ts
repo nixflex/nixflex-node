@@ -4,6 +4,7 @@
 import type { HttpClient, RequestOptions } from '../client.js';
 import type { Call, OutboundCallParams, OutboundCallResponse, CallDeleteResponse, CallDeleteAllResponse } from '../types/calls.js';
 import type { ListParams } from '../types/agents.js';
+import type { CallHistoryParams, CallHistoryPage, CallRead, CallRecording, CallBilling } from '../types/call-reads.js';
 
 export class Calls {
   constructor(private readonly http: HttpClient) {}
@@ -24,6 +25,26 @@ export class Calls {
     return this.http.request<Call[]>('GET', '/calls', undefined, { limit: params.limit, offset: params.offset }, opts);
   }
 
+  /** Dashboard-style filtered metadata, totals and stable cursor order. Not a frozen database snapshot. */
+  history(params: CallHistoryParams = {}, opts?: RequestOptions): Promise<CallHistoryPage> {
+    return this.http.request('GET', '/calls/history', undefined, { ...params }, opts);
+  }
+
+  /** Explicit nullable detail, failed-start and retained stubs; no raw storage URL. */
+  read(callId: string, opts?: RequestOptions): Promise<CallRead> {
+    return this.http.request('GET', `/calls/${encodeURIComponent(callId)}`, undefined, { view: 'detail' }, opts);
+  }
+
+  /** Five-minute managed-storage link, or a truthful non-downloadable state. Never reads BYO storage. */
+  recording(callId: string, opts?: RequestOptions): Promise<CallRecording> {
+    return this.http.request('GET', `/calls/${encodeURIComponent(callId)}/recording`, undefined, undefined, opts);
+  }
+
+  /** Existing settled proof only. Unknown is null, not a zero charge. */
+  billing(callId: string, opts?: RequestOptions): Promise<CallBilling> {
+    return this.http.request('GET', `/calls/${encodeURIComponent(callId)}/billing`, undefined, undefined, opts);
+  }
+
   /** Iterate calls across pages. pageSize must be a whole number 1..200.
    * Offset pages are not a snapshot: concurrent changes can shift rows. */
   async *iter(pageSize = 100, opts?: RequestOptions): AsyncGenerator<Call> {
@@ -38,7 +59,7 @@ export class Calls {
   }
 
   /** Fetch one call: transcript, recording URL, post-call analysis. Note:
-   * duration_ms is time CONNECTED (what you are billed on) - ring time is
+   * duration_ms is time CONNECTED (not necessarily AI billed time) - ring time is
    * excluded, so it will not equal end_timestamp - start_timestamp on
    * outbound calls. */
   get(callId: string, opts?: RequestOptions): Promise<Call> {

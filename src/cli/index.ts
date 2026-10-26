@@ -33,6 +33,7 @@ import { numberUsage } from './number-usage.js';
 import { numberMove } from './number-move.js';
 import { agentListFlags, agentListParams } from './agent-list.js';
 import { callCreateBody } from './call-create.js';
+import { callRead, callReadFlags } from './call-reads.js';
 import { setupMcp } from './mcp/setup.mjs';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
@@ -212,6 +213,10 @@ CALLS
   calls create --agent ID --to +44... --prompt TEXT|@file [--from +44...] [--var k=v ...] [--wait] [--timeout S]
   calls list [--limit N] [--agent ID]
   calls get <call_id>
+  calls history [--number +44...] [--outcome failed] [--period month] [--cursor CURSOR]
+  calls read <call_id>            nullable detail, including retained metadata
+  calls recording <call_id>       recording status and five-minute link
+  calls billing <call_id>         existing AI/free-human billing proof
   calls delete <call_id> --confirm
   calls delete-all --confirm       every call and recording on the account
 
@@ -298,6 +303,7 @@ async function main(): Promise<void> {
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
       ...agentListFlags,
+      ...callReadFlags,
       'mcp-local': { type: 'string' },
       json: { type: 'boolean' }, key: { type: 'string' }, 'base-url': { type: 'string' }, help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' },
       confirm: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, limit: { type: 'string' }, status: { type: 'string' },
@@ -388,6 +394,7 @@ async function main(): Promise<void> {
 
   // --- calls ---
   if (group === 'calls') {
+    if (['history','read','recording','billing'].includes(cmd)) { out(await callRead(client, cmd, a1, values)); return; }
     if (cmd === 'create') {
       const body = callCreateBody(bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from') }), vars(values.var as string[] | undefined));
       if (!body.agent_id || !body.to_number || !body.prompt) fail('calls create --agent ID --to +44... --prompt TEXT|@file [--from] [--var k=v] [--wait]');

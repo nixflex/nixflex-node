@@ -76,6 +76,7 @@ export type { NixflexClientOptions, RequestOptions };
 export * from './errors.js';
 export * from './types/agents.js';
 export * from './types/calls.js';
+export * from './types/call-reads.js';
 export * from './types/phone-numbers.js';
 export * from './types/number-usage.js';
 export * from './types/sms.js';

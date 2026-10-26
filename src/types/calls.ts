@@ -3,50 +3,51 @@
 // Types generated from docs.nixflex.com/api-reference/calls/* (Aug 2026).
 // ============================================
 
-export type CallDirection = 'inbound' | 'outbound';
+export type CallDirection = 'inbound' | 'outbound' | 'web';
 export type CallerSentiment = 'happy' | 'neutral' | 'frustrated';
 
-/** A call record. Both GET /calls and GET /calls/:id return this exact shape. */
+/** Legacy call record. Retention/unfinished work can leave fields null or absent. */
 export interface Call {
   call_id: string;
-  agent_id: string;
-  call_direction: CallDirection;
-  /** Same meaning as call_direction; both are returned. */
-  call_type?: CallDirection;
+  agent_id: string | null;
+  call_direction: CallDirection | null;
+  /** Historical classification can differ from call_direction; web is a separate type. */
+  call_type?: CallDirection | null;
   /** Caller's number, E.164. */
-  from_number: string;
+  from_number?: string | null;
   /** Number that was called, E.164. */
-  to_number: string;
-  call_status: string;
+  to_number?: string | null;
+  call_status: string | null;
   /** Epoch MILLISECONDS. On outbound this is when dialling began - BEFORE ringing. */
-  start_timestamp: number;
+  start_timestamp: number | null;
   /** Epoch MILLISECONDS. */
-  end_timestamp: number;
+  end_timestamp: number | null;
   /** Epoch milliseconds when ANSWERED, or null (inbound / older calls). Ring time = answered_at - start_timestamp. */
-  answered_at: number | null;
-  /** TIME CONNECTED in ms (answer to hangup) - the number you are billed on. Ring time excluded, so on outbound this is NOT end_timestamp - start_timestamp. */
-  duration_ms: number;
+  answered_at?: number | null;
+  /** Connected duration, not necessarily AI billed time. See calls.billing() for takeover proof. */
+  duration_ms: number | null;
   /** Why the call ended: completed, transferred, voicemail_detected, silence_timeout,
    * ivr_timeout, max_duration_reached, caller_hangup (inbound), callee_hangup (outbound),
    * busy / failed / no-answer / canceled (carrier words for calls that never connected),
    * concurrency_limit, and rare infrastructure endings. */
-  ended_reason: string;
+  ended_reason: string | null;
   /** Minutes actually charged for this call. Transfers stop the meter at handoff, so
    * this can be less than duration_ms suggests - the recording runs to the end either way. */
-  charged_minutes?: number;
+  charged_minutes?: number | null;
+  cost?: number | null;
   /** A single string, one turn per line - not an array of turn objects. */
-  transcript: string;
-  call_summary: string;
-  caller_sentiment: CallerSentiment;
-  call_successful: boolean;
+  transcript?: string | null;
+  call_summary?: string | null;
+  caller_sentiment?: CallerSentiment | null;
+  call_successful?: boolean | null;
   /** Fields pulled from the call, per the agent's extraction settings. */
-  extracted_data: Record<string, unknown>;
+  extracted_data?: Record<string, unknown> | null;
   /** Appointments booked during the call. */
-  bookings: unknown[];
-  /** MP3 link, or null if recording was off. This is the ONLY copy - the carrier's copy is deleted. */
+  bookings?: unknown[] | null;
+  /** Legacy pointer; null does not prove recording was off. Use calls.recording() for state and short link. */
   recording_url: string | null;
   recording_duration_s?: number;
-  voicemail_detected: boolean;
+  voicemail_detected?: boolean | null;
   voicemail_detection_method?: string | null;
   /** Carrier machine-detection verdict (e.g. 'human', 'machine_start'). Only when AMD is enabled. */
   amd_result?: string | null;
