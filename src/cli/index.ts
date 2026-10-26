@@ -31,6 +31,7 @@ import { errorOutput } from '../error-output.js';
 import { readNumber } from './number-reads.js';
 import { numberUsage } from './number-usage.js';
 import { numberMove } from './number-move.js';
+import { agentListFlags, agentListParams } from './agent-list.js';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
 declare const __CLI_VERSION__: string | undefined;
@@ -199,7 +200,7 @@ ACCOUNT
   keys rotate --confirm          new secret; the old one stops working immediately
 
 AGENTS
-  agents list [--limit N]
+  agents list [--limit 1..200] [--offset N] [--status active|disabled|all] [--search TEXT]
   agents get <agent_id>
   agents create --name NAME --prompt TEXT|@file [--voice ID] [--language xx] [--set k=v ...]
   agents update <id> [--name] [--prompt] [--voice] [--language] [--incall-sms true|false] [--set k=v ...]
@@ -321,6 +322,7 @@ async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
+      ...agentListFlags,
       json: { type: 'boolean' }, key: { type: 'string' }, 'base-url': { type: 'string' }, help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' },
       confirm: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, limit: { type: 'string' }, status: { type: 'string' },
       provider: { type: 'string' }, cursor: { type: 'string' },
@@ -387,7 +389,7 @@ async function main(): Promise<void> {
 
   // --- agents ---
   if (group === 'agents') {
-    if (cmd === 'list') { out(await client.agents.list(limit ? { limit } : {})); return; }
+    if (cmd === 'list') { out(await client.agents.list(agentListParams(values))); return; }
     if (cmd === 'get') { if (!a1) fail('agents get <agent_id>'); out(await client.agents.get(a1)); return; }
     if (cmd === 'create') {
       const body = bodyFrom(values, { name: s('name'), system_prompt: textOrFile(s('prompt')), voice_id: s('voice'), language: s('language') });

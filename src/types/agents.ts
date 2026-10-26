@@ -56,7 +56,7 @@ export interface AgentCreateParams extends AgentContractSettings {
   response_length?: ResponseLength;
   /** Agent greets the caller immediately. Default true. */
   ai_speaks_first?: boolean;
-  /** AI improvises the greeting per call instead of the static welcome. */
+  /** New-agent default true: AI writes the inbound greeting from the prompt. */
   dynamic_greeting?: boolean;
   /** 0-100. Lower = harder to interrupt. Default 50. */
   interruption_sensitivity?: number;
@@ -66,9 +66,9 @@ export interface AgentCreateParams extends AgentContractSettings {
   boosted_keywords?: string | null;
   /** Legacy pickup setting. This contract release does not change its handling or default (10). */
   pickup_delay?: number;
-  /** Positive whole seconds; omitted create default 600. null uses the existing runtime fallback. */
+  /** Positive whole seconds; omitted create default 300. null uses the existing runtime fallback. */
   max_call_duration_seconds?: number | null;
-  /** Positive whole seconds; omitted create default 30. null uses the existing runtime fallback. */
+  /** Positive whole seconds; omitted create default 10. null uses the existing runtime fallback. */
   silence_hangup_seconds?: number | null;
   /** Save call audio. Retention inherits the account default on create. Default true. */
   record_call?: boolean;
@@ -112,7 +112,30 @@ export interface AgentCreateParams extends AgentContractSettings {
 export interface AgentUpdateParams extends AgentCreateParams { call_retention_days?: AgentRetentionDays; }
 
 /** The agent object as the API returns it. */
-export interface Agent extends Omit<AgentContractSettings, 'post_call_sms_template'> {
+export interface Agent {
+  /** Read-only identity and historical fields are never create/update parameters. */
+  id?: string;
+  api_key_id?: string;
+  voice_key?: string | null;
+  timezone?: string | null;
+  stt_confidence?: number | null;
+  stt_max_silence_ms?: number | null;
+  wait_tag_seconds?: number | null;
+  ivr_timeout_seconds?: number | null;
+  remember_callers?: boolean;
+  require_booking_confirmation?: boolean;
+  phone_number?: string | null;
+  llm_model?: string | null;
+  boosted_keywords?: string | null;
+  twilio_account_sid?: string | null;
+  greeting_language?: string | null;
+  precall_webhook_url?: string | null;
+  tester_scenarios?: unknown[];
+  outbound_transfer_numbers?: unknown[];
+  outbound_warm_transfer_numbers?: unknown[];
+  outbound_post_call_sms_templates?: unknown[];
+  outbound_max_duration_seconds?: number | null;
+  outbound_silence_hangup_seconds?: number | null;
   agent_id: string;
   name: string;
   system_prompt: string;
@@ -167,4 +190,15 @@ export interface ListParams {
   /** Hard-capped at 200 per request (higher values are reduced, not rejected). */
   limit?: number;
   offset?: number;
+}
+
+/** Agents use strict bounds; other resources retain their existing ListParams rules. */
+export interface AgentListParams {
+  /** Whole number 1..200, default 100. Out-of-range values are rejected. */
+  limit?: number;
+  /** Whole number 0..1000000, default 0. */
+  offset?: number;
+  status?: 'active' | 'disabled' | 'all';
+  /** Case-insensitive literal substring of name or agent_id, at most 200 characters. */
+  search?: string;
 }

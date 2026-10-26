@@ -2,7 +2,7 @@
 // src/resources/agents.ts
 // ============================================
 import type { HttpClient, RequestOptions } from '../client.js';
-import type { Agent, AgentCreateParams, AgentUpdateParams, AgentDeleteResponse, ListParams } from '../types/agents.js';
+import type { Agent, AgentCreateParams, AgentUpdateParams, AgentDeleteResponse, AgentListParams } from '../types/agents.js';
 
 export class Agents {
   constructor(private readonly http: HttpClient) {}
@@ -13,15 +13,18 @@ export class Agents {
     return this.http.request<Agent>('POST', '/agents', params, undefined, opts);
   }
 
-  /** List active agents, newest first. Default 100, hard cap 200 per page. */
-  list(params: ListParams = {}, opts?: RequestOptions): Promise<Agent[]> {
-    return this.http.request<Agent[]>('GET', '/agents', undefined, { limit: params.limit, offset: params.offset }, opts);
+  /** Bare array. Active by default; stable created_at DESC, agent_id DESC order. */
+  list(params: AgentListParams = {}, opts?: RequestOptions): Promise<Agent[]> {
+    return this.http.request<Agent[]>('GET', '/agents', undefined, { limit: params.limit, offset: params.offset, status: params.status, search: params.search }, opts);
   }
 
-  /** Iterate ALL agents across pages: `for await (const a of client.agents.iter()) { ... }` */
+  /** Iterate active agents across pages. pageSize must be a whole number 1..200.
+   * Offset pages are not a snapshot: concurrent creates/disables can shift rows. */
   async *iter(pageSize = 100, opts?: RequestOptions): AsyncGenerator<Agent> {
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 200) throw new RangeError('Agent pageSize must be a whole number from 1 to 200.');
     let offset = 0;
     while (true) {
+      if (offset > 1000000) throw new RangeError('Agent iteration exceeds the maximum offset of 1000000.');
       const page = await this.list({ limit: pageSize, offset }, opts);
       for (const item of page) yield item;
       if (page.length < pageSize) return;
