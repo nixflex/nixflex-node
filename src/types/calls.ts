@@ -65,9 +65,9 @@ export interface OutboundCallParams {
   agent_id: string;
   /** Who to call, E.164 ("+447386172392", not "07386172392"). NOTE: the field is to_number, not `to` - `to` is the SMS endpoints' field. */
   to_number: string;
-  /** The call purpose - what to say and why. Sent fresh per call, stored nowhere. Must not be empty. */
+  /** Per-call purpose; may be retained with the call's actual prompt. Must not be empty. */
   prompt: string;
-  /** Key-values interpolated into the prompt as {key}. Unmatched references stay literal - check your keys. */
+  /** Key-values interpolated as {{key}}. Supply every referenced key; missing values may refuse the call when validation is enabled. */
   dynamic_vars?: Record<string, string>;
   /** Which of your numbers to dial from. Must be outbound-enabled on this agent. Omit = the agent's first outbound-enabled number. */
   from_number?: string;
@@ -143,7 +143,7 @@ export interface BatchLaunchResponse {
 export interface CallDeleteResponse {
   call_id: string;
   deleted: boolean;
-  /** Whether a recording file was found and removed from storage. */
+  /** Legacy cleanup indicator; not proof an object existed or every copy was erased. */
   recording_deleted: boolean;
 }
 

@@ -32,6 +32,7 @@ import { readNumber } from './number-reads.js';
 import { numberUsage } from './number-usage.js';
 import { numberMove } from './number-move.js';
 import { agentListFlags, agentListParams } from './agent-list.js';
+import { callCreateBody } from './call-create.js';
 import { setupMcp } from './mcp/setup.mjs';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
@@ -388,7 +389,7 @@ async function main(): Promise<void> {
   // --- calls ---
   if (group === 'calls') {
     if (cmd === 'create') {
-      const body = bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from'), variables: vars(values.var as string[] | undefined) });
+      const body = callCreateBody(bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from') }), vars(values.var as string[] | undefined));
       if (!body.agent_id || !body.to_number || !body.prompt) fail('calls create --agent ID --to +44... --prompt TEXT|@file [--from] [--var k=v] [--wait]');
       const created = await client.calls.create(body as never);
       if (!values.wait) { out(created); return; }

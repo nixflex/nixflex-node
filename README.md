@@ -151,6 +151,19 @@ Use `numbers update <number> --set web_agent_enabled=true` (and the other boolea
 names above); omitted fields remain unchanged. Existing commands still work.
 These are local additions, not a new npm publication.
 
+## Local Area 3 batch 1 candidate (not published)
+
+Single-call CLI `--var name=Sam` fills `{{name}}` via `dynamic_vars`. Node uses
+`dynamic_vars` directly. CLI JSON can use `variables` as a compatibility alias;
+do not combine aliases or combine them with `--var`. Ambiguity fails before HTTP.
+Campaign recipient `variables` is unchanged. Prompts can be retained in call data.
+
+`calls.iter(200)` pages beyond 200 records, including a full final page. Sizes
+outside whole numbers 1–200 fail before any request. Offset paging is not a snapshot.
+The existing GET-only bounded retry rule remains: changes never automatically
+repeat; an uncertain outcome means check before retrying. Guarded call deletion
+can refuse cleanup and is not a promise of instant account/SMS/all-copy erasure.
+
 Full API reference: **https://docs.nixflex.com**
 
 Release history: [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE).

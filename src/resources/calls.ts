@@ -19,13 +19,15 @@ export class Calls {
 
   /** List calls, newest first. Default 50, hard cap 200. The response is a
    * bare array with no total - page until you get fewer rows than you asked
-   * for (or use iter()). Call data is retained 90 days. */
+   * for within the 200 cap (or use iter()). Availability depends on retention. */
   list(params: ListParams = {}, opts?: RequestOptions): Promise<Call[]> {
     return this.http.request<Call[]>('GET', '/calls', undefined, { limit: params.limit, offset: params.offset }, opts);
   }
 
-  /** Iterate ALL calls across pages: `for await (const c of client.calls.iter()) { ... }` */
+  /** Iterate calls across pages. pageSize must be a whole number 1..200.
+   * Offset pages are not a snapshot: concurrent changes can shift rows. */
   async *iter(pageSize = 100, opts?: RequestOptions): AsyncGenerator<Call> {
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 200) throw new RangeError('Call pageSize must be a whole number from 1 to 200.');
     let offset = 0;
     while (true) {
       const page = await this.list({ limit: pageSize, offset }, opts);
@@ -43,14 +45,14 @@ export class Calls {
     return this.http.request<Call>('GET', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
   }
 
-  /** GDPR: PERMANENTLY erase one call - the record AND its recording file.
-   * Irreversible. Throws NixflexNotFoundError if the ID is not yours. */
+  /** Request guarded call deletion; active/unsettled work and cleanup safety
+   * holds can refuse it. Not proof of every copy's erasure. Never auto-retried. */
   delete(callId: string, opts?: RequestOptions): Promise<CallDeleteResponse> {
     return this.http.request<CallDeleteResponse>('DELETE', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
   }
 
-  /** GDPR: PERMANENTLY erase ALL calls, recordings, and SMS messages on this
-   * key. Irreversible - intended for data-erasure requests and offboarding. */
+  /** Request guarded call cleanup, not account/SMS erasure. Safety holds can
+   * refuse it; legacy recording counters are not proof of every copy's erasure. */
   deleteAll(opts?: RequestOptions): Promise<CallDeleteAllResponse> {
     return this.http.request<CallDeleteAllResponse>('DELETE', '/calls', undefined, undefined, opts);
   }
