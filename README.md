@@ -1,5 +1,23 @@
 # Nixflex Node.js SDK
 
+## MCP setup foundation (local 0.9.1 candidate, not published)
+
+The SDK's API behaviour is unchanged. MCP setup now requires Node 22+ and uses
+secret-free, version-pinned OS-specific launchers. Supported tools are Claude
+Desktop, Claude Code, Codex and Cursor; VS Code setup is retired. Run 1 writes only
+Claude Desktop/Cursor configs; the other installers are run 3. The shared builders
+already cover all four formats. See `FOUNDATION.md` for the local packed test.
+
+`nixflex mcp setup <claude|cursor> --mcp-local <unpacked-package-directory>` can test
+the unpublished MCP locally. Normal npm-mode setup is intentionally blocked while
+the candidate is unpublished. No key is copied to the client configuration.
+Provide a key and its explicit approved API URL through the client's environment,
+or use an existing legacy credential file with its saved URL. Legacy login is
+plaintext storage, not an OS vault. Secure credential setup is deferred to run 3.
+Malformed/unreadable config is refused; unrelated entries/comments are preserved.
+Replacement shows a redacted preview and needs confirmation (`--confirm` for scripts).
+Close other config editors while setup runs; do not run concurrent installers.
+
 Official Node.js SDK for the [Nixflex](https://nixflex.com) voice AI platform — AI phone agents, outbound campaigns, SMS, and web calls.
 
 ```bash

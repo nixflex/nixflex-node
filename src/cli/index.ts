@@ -16,7 +16,7 @@
 // true/false/null/numbers parsed, @file reads a file) and --body @file.json for nested
 // objects. A new API field needs NO CLI change - named flags exist only for the common
 // cases. That is the whole reason this file can stay still for a year.
-// ZERO DEPENDENCIES: node:util parseArgs, node:fs, node:os. Node >= 18 (same as the SDK).
+// SDK remains dependency-free. MCP setup bundles jsonc-parser for safe comment-preserving edits.
 // STREAMS: data to stdout, progress + errors to stderr - scripts can pipe stdout safely.
 // KEY RESOLUTION: --key flag > NIXFLEX_API_KEY env > ~/.nixflex/config.json.
 // DESTRUCTIVE COMMANDS: preview and stop unless --confirm (alias --yes) is given.
@@ -32,6 +32,7 @@ import { readNumber } from './number-reads.js';
 import { numberUsage } from './number-usage.js';
 import { numberMove } from './number-move.js';
 import { agentListFlags, agentListParams } from './agent-list.js';
+import { setupMcp } from './mcp/setup.mjs';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
 declare const __CLI_VERSION__: string | undefined;
@@ -258,7 +259,7 @@ BRING YOUR OWN
   tts set --set k=v ...          tts get          tts delete --confirm
 
 MCP
-  mcp setup <claude|cursor|vscode>   connect the Nixflex MCP server to that app
+  mcp setup <claude|cursor>          safe MCP setup (Claude Code/Codex in run 3; VS Code retired)
 
 FLAGS   --json machine output   --set field=value (repeat)   --body @file.json | -   --confirm / --yes
 EXIT    0 ok   1 error   2 no API key
@@ -288,34 +289,7 @@ function completion(shell: string): string {
 }
 
 // ---------- mcp setup ----------
-function mcpSetup(app: string): void {
-  const home = homedir();
-  // Desktop apps do NOT expand \${VAR} in their config. The MCP server reads
-  // ~/.nixflex/config.json itself, so after `nixflex login` no env block is needed; only
-  // when the key exists solely in the environment do we write its real value.
-  const stored = readConfig().api_key;
-  const entry: Record<string, unknown> = { command: 'npx', args: ['-y', 'nixflex-mcp'] };
-  if (!stored && process.env.NIXFLEX_API_KEY) entry.env = { NIXFLEX_API_KEY: process.env.NIXFLEX_API_KEY };
-  if (!stored && !process.env.NIXFLEX_API_KEY) fail("Run 'nixflex login' first so the MCP server can find your key.");
-  let file: string; let root: string;
-  if (app === 'claude') {
-    file = process.platform === 'win32' ? join(process.env.APPDATA || home, 'Claude', 'claude_desktop_config.json')
-      : process.platform === 'darwin' ? join(home, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json')
-      : join(home, '.config', 'Claude', 'claude_desktop_config.json');
-    root = 'mcpServers';
-  } else if (app === 'cursor') { file = join(home, '.cursor', 'mcp.json'); root = 'mcpServers'; }
-  else if (app === 'vscode') { file = join(process.cwd(), '.vscode', 'mcp.json'); root = 'servers'; }
-  else fail('mcp setup expects claude, cursor or vscode');
-  let cfg: Record<string, unknown> = {};
-  try { cfg = JSON.parse(readFileSync(file, 'utf8')); } catch { /* new file */ }
-  const servers = (cfg[root] as Record<string, unknown>) || {};
-  servers['nixflex'] = entry;
-  cfg[root] = servers;
-  const dir = join(file, '..');
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
-  out({ written: file, server: 'nixflex', key: stored ? 'from ~/.nixflex/config.json' : 'written into the config env', note: 'Fully quit and reopen ' + app + '.' });
-}
+async function mcpSetup(app: string, confirmed: boolean, localPackage?: string): Promise<void> { out(await setupMcp(app, { confirmed, localPackage })); }
 
 // ---------- main ----------
 async function main(): Promise<void> {
@@ -323,6 +297,7 @@ async function main(): Promise<void> {
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
       ...agentListFlags,
+      'mcp-local': { type: 'string' },
       json: { type: 'boolean' }, key: { type: 'string' }, 'base-url': { type: 'string' }, help: { type: 'boolean', short: 'h' }, version: { type: 'boolean', short: 'v' },
       confirm: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, limit: { type: 'string' }, status: { type: 'string' },
       provider: { type: 'string' }, cursor: { type: 'string' },
@@ -359,7 +334,7 @@ async function main(): Promise<void> {
   }
   if (group === 'logout') { const c = readConfig(); delete c.api_key; writeConfig(c); out({ logged_out: true }); return; }
   if (group === 'completion') { process.stdout.write(completion(cmd || '')); return; }
-  if (group === 'mcp') { if (cmd !== 'setup') fail('usage: nixflex mcp setup <claude|cursor|vscode>'); mcpSetup(a1); return; }
+  if (group === 'mcp') { if (cmd !== 'setup') fail('usage: nixflex mcp setup <claude|cursor>'); await mcpSetup(a1, confirmed, s('mcp-local')); return; }
 
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
   const limit = s('limit') ? parseInt(s('limit') as string, 10) : undefined;

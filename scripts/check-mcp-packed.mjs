@@ -1,0 +1,30 @@
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, readFileSync, writeFileSync, realpathSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { randomUUID, createHash } from 'node:crypto';
+import a from 'node:assert/strict';
+const root=dirname(dirname(fileURLToPath(import.meta.url))),work=join(root,'.artifacts',randomUUID());
+mkdirSync(work,{recursive:true});
+function run(command,args,cwd,env=process.env){const r=spawnSync(command,args,{cwd,env,encoding:'utf8',windowsHide:true});if(r.status!==0)throw Error(r.stderr);return r.stdout;}
+if(!process.env.npm_execpath)throw Error('Use npm run check:packed');
+const pack=JSON.parse(run(process.execPath,[process.env.npm_execpath,'pack','--ignore-scripts','--json','--pack-destination',work],root))[0];
+const tarball=join(work,pack.filename);run('tar',['-xf',tarball,'-C',work],root);
+a.ok(pack.files.some(f=>f.path==='THIRD-PARTY-NOTICES.md'));
+const directory=join(work,'package'),binary=join(directory,'dist','cli','index.js');
+const pkg=JSON.parse(readFileSync(join(directory,'package.json')));
+a.equal(run(process.execPath,[binary,'--version'],work).trim(),pkg.version);
+const fake=join(work,'mcp fixture');mkdirSync(fake);
+writeFileSync(join(fake,'package.json'),JSON.stringify({name:'nixflex-mcp',version:'0.3.1',bin:{'nixflex-mcp':'./index.js'}}));
+writeFileSync(join(fake,'index.js'),'// never executed');
+const home=realpathSync(work),key='nxf_packedcli:nxfs_packedcli';
+const env={};for(const [k,v]of Object.entries(process.env))if(/^(path|systemroot|windir|temp|tmp)$/i.test(k))env[k]=v;
+Object.assign(env,{HOME:home,USERPROFILE:home,APPDATA:home,NIXFLEX_API_KEY:key,NIXFLEX_BASE_URL:'https://nixflex-voice-engine-staging.up.railway.app'});
+const output=run(process.execPath,[binary,'mcp','setup','cursor','--mcp-local',fake,'--json'],work,env);
+const config=readFileSync(join(home,'.cursor','mcp.json'),'utf8');
+a.ok(!output.includes(key));a.ok(!config.includes(key));
+a.equal(JSON.parse(config).mcpServers['nixflex-staging'].command,process.execPath);
+const evidence={version:pkg.version,node:process.version,platform:process.platform,tarball,
+sha256:createHash('sha256').update(readFileSync(tarball)).digest('hex'),checks:'packed CLI version, local setup, bundled parser, notice, no secret in generated config; no network/client launch'};
+writeFileSync(join(root,'.artifacts','latest.json'),JSON.stringify(evidence,null,2)+'\n');
+process.stdout.write(JSON.stringify(evidence,null,2)+'\n');
