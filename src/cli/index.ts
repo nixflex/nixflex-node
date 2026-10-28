@@ -34,6 +34,7 @@ import { numberMove } from './number-move.js';
 import { agentListFlags, agentListParams } from './agent-list.js';
 import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
+import { organisationCommand, organisationHelp } from './organisation.js';
 import { setupMcp } from './mcp/setup.mjs';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
@@ -182,7 +183,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
 }
 
 // ---------- help ----------
-const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'storage', 'llm', 'tts'];
+const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'storage', 'llm', 'tts', 'organisation'];
 const HELP = `nixflex ${VERSION} - the Nixflex voice AI platform from your terminal
 
 USAGE  nixflex <group> <command> [args] [--json] [--key KEY] [--base-url URL]
@@ -322,7 +323,7 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
@@ -344,6 +345,7 @@ async function main(): Promise<void> {
   if (group === 'mcp') { if (cmd !== 'setup') fail('usage: nixflex mcp setup <claude|cursor>'); await mcpSetup(a1, confirmed, s('mcp-local')); return; }
 
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
+  if (group === 'organisation') { out(await organisationCommand(client,cmd,a1,bodyFrom(values),confirmed)); return; }
   const limit = s('limit') ? parseInt(s('limit') as string, 10) : undefined;
   const slot = (s('slot') === '2' ? 2 : 1) as 1 | 2;
   const preview = async (what: string, fetch: () => Promise<unknown>): Promise<boolean> => {

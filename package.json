@@ -42,7 +42,8 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "THIRD-PARTY-NOTICES.md"
+    "THIRD-PARTY-NOTICES.md",
+    "ORGANISATIONS.md"
   ],
   "engines": {
     "node": ">=18"

@@ -19,9 +19,12 @@ import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage, Llm, Tts } f
 import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { createKey } from './key-create.js';
+import { Organisation } from './resources/organisation.js';
+export * from './resources/organisation.js';
 export type { PhoneNumberMoveParams, PhoneNumberMoveResponse } from './resources/number-move.js';
 
 export class Nixflex {
+  readonly organisation: Organisation;
   /** AI agents - create, list, get, update, delete. */
   readonly agents: Agents;
   /** Calls - trigger outbound, list history, fetch transcripts + analysis. */
@@ -49,6 +52,7 @@ export class Nixflex {
 
   constructor(options: NixflexClientOptions) {
     const http = new HttpClient(options);
+    this.organisation = new Organisation(http);
     this.agents = new Agents(http);
     this.calls = new Calls(http);
     this.campaigns = new Campaigns(http);
