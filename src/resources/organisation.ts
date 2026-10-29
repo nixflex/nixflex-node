@@ -1,9 +1,9 @@
 import type {HttpClient,RequestOptions} from '../client.js';
 export type OrganisationRole='owner'|'admin'|'member';
 export interface OrganisationContext {organisation_id:string;key_id:string;name:string;role:OrganisationRole;permissions:string[]}
-export interface OrganisationMember {user_id:string;email:string;name:string;role:OrganisationRole;joined_at:string}
+export interface OrganisationMember {user_id:string;email:string;name:string;role:OrganisationRole;joined_at:string;last_active_at?:string|null}
 export interface OrganisationInvite {id:string;email:string;role:OrganisationRole;state:string;delivery:'pending'|'sent'|'failed'|'unknown';expires_at:string}
-export interface OrganisationMembers {members:OrganisationMember[];invites:OrganisationInvite[];limits:{members:number;invites_per_day:number}}
+export interface OrganisationMembers {members:OrganisationMember[];invites:OrganisationInvite[];limits:{members:number;invites_per_day:number;invites_used_today?:number;seats_used?:number}}
 export interface InvitationReceipt {id:string;delivery:string;expires_in?:number}
 export interface MembershipReceipt {user_id:string;state:'removed'|'active';live_disconnect_pending:boolean}
 export interface ActivityEvent {id:number;created_at:string;actor_id:string|null;actor_kind:string;actor:string;action:string;target:string|null;result:string;detail:Record<string,unknown>}
