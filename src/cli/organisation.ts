@@ -3,10 +3,14 @@ export const organisationHelp='\nORGANISATION (candidate; not enabled)\n'+[
  'organisation get','organisation members','organisation activity [--set before=123 --set actor=UUID]',
  'organisation invite --set email=person@example.com --set role=member',
  'organisation claim --set email=owner@example.com','organisation resend INVITE_ID',
- 'organisation revoke INVITE_ID','organisation remove USER_ID','organisation role USER_ID --set role=admin'
+ 'organisation revoke INVITE_ID','organisation remove USER_ID','organisation role USER_ID --set role=admin',
+ 'organisation removeMember USER_ID (alias of remove)',
+ 'organisation setRole USER_ID --set role=admin (alias of role)',
+ 'organisation claimInvite --set email=owner@example.com (alias of claim)'
 ].map(line=>'  '+line).join('\n')+'\nChanges preview unless --confirm is supplied. Personal owner actions require the dashboard.\n';
 export async function organisationCommand(client:Nixflex,command:string,id:string|undefined,body:Record<string,unknown>,confirmed:boolean){
  const org=client.organisation;
+ command=({removeMember:'remove',setRole:'role',claimInvite:'claim'} as Record<string,string>)[command]||command;
  if(command==='get')return org.get();
  if(command==='members')return org.members();
  if(command==='activity')return org.activity({before:typeof body.before==='string'?body.before:undefined,actor:typeof body.actor==='string'?body.actor:undefined});
