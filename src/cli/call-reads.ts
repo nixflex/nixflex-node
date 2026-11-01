@@ -19,6 +19,5 @@ export async function callRead(client: Nixflex, command: string, id: string | un
   if (!id) throw new Error(`calls ${command} requires a call ID.`);
   if (command === 'read') return client.calls.read(id);
   if (command === 'recording') return client.calls.recording(id);
-  if (command === 'billing') return client.calls.billing(id);
   throw new Error('Unknown call read.');
 }

@@ -22,6 +22,7 @@ export class Calls {
    * bare array with no total - page until you get fewer rows than you asked
    * for within the 200 cap (or use iter()). Availability depends on retention. */
   list(params: ListParams = {}, opts?: RequestOptions): Promise<Call[]> {
+    if ('agent_id' in params) throw new TypeError('Legacy calls.list does not filter by agent; use calls.history({agent: id}).');
     return this.http.request<Call[]>('GET', '/calls', undefined, { limit: params.limit, offset: params.offset }, opts);
   }
 
@@ -35,15 +36,11 @@ export class Calls {
     return this.http.request('GET', `/calls/${encodeURIComponent(callId)}`, undefined, { view: 'detail' }, opts);
   }
 
-  /** Five-minute managed-storage link, or a truthful non-downloadable state. Never reads BYO storage. */
+  /** Managed-storage link: use expires_at, never a hardcoded lifetime, or a truthful non-downloadable state. Never reads BYO storage. */
   recording(callId: string, opts?: RequestOptions): Promise<CallRecording> {
     return this.http.request('GET', `/calls/${encodeURIComponent(callId)}/recording`, undefined, undefined, opts);
   }
 
-  /** Existing settled proof only. Unknown is null, not a zero charge. */
-  billing(callId: string, opts?: RequestOptions): Promise<CallBilling> {
-    return this.http.request('GET', `/calls/${encodeURIComponent(callId)}/billing`, undefined, undefined, opts);
-  }
 
   /** Iterate calls across pages. pageSize must be a whole number 1..200.
    * Offset pages are not a snapshot: concurrent changes can shift rows. */
@@ -87,17 +84,12 @@ import type { BatchCampaignParams, BatchCreateResponse, BatchLaunchResponse } fr
 export class Campaigns {
   constructor(private readonly http: HttpClient) {}
 
-  /** Create a batch campaign - many outbound calls under one campaign_id.
-   * schedule_type 'now' launches immediately; 'schedule' waits for
-   * scheduled_date and fires INSIDE the calling window in the campaign's
-   * timezone (yours > the agent's > Europe/London). Overnight windows
-   * supported. One campaign = one timezone - split multi-country lists. */
+  /** Create a campaign. Launch and each dispatch respect consent, recipient-local hours and contact checks. */
   create(params: BatchCampaignParams, opts?: RequestOptions): Promise<BatchCreateResponse> {
     return this.http.request<BatchCreateResponse>('POST', '/calls/batch', params, undefined, opts);
   }
 
-  /** Launch a scheduled campaign immediately, overriding its schedule.
-   * Already running = no-op returning current status. */
+  /** Request launch; it does not bypass recipient checks or prove delivery. Never auto-retried. */
   launch(campaignId: string, opts?: RequestOptions): Promise<BatchLaunchResponse> {
     return this.http.request<BatchLaunchResponse>('POST', `/calls/batch/${encodeURIComponent(campaignId)}/launch`, undefined, undefined, opts);
   }

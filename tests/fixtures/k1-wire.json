@@ -1,0 +1,62 @@
+{
+  "campaign": {
+    "agent_id": "a",
+    "from_number": "+12025550101",
+    "message_template": "Hi {{name}}",
+    "recipients": [
+      {
+        "phone": "+12025550100",
+        "country": "US",
+        "timezone": "America/New_York",
+        "variables": {
+          "name": "Sam"
+        }
+      }
+    ],
+    "schedule_type": "schedule",
+    "scheduled_date": "2026-12-01",
+    "consent_confirmed": false,
+    "duplicate_policy": "reject",
+    "allow_wider_hours": false,
+    "window_start_minutes": 0,
+    "reply_window_hours": 0
+  },
+  "call": {
+    "agent_id": "a",
+    "to_number": "+12025550100",
+    "prompt": "Hello",
+    "recipient_country": "US",
+    "recipient_timezone": "America/New_York",
+    "dynamic_vars": {
+      "name": "Sam"
+    }
+  },
+  "sms": {
+    "agent_id": "a",
+    "from_number": "+12025550101",
+    "to": "+12025550100",
+    "message": "Hello",
+    "context": {
+      "reply_context": "A booked visit"
+    },
+    "recipient_country": "US",
+    "recipient_timezone": "America/New_York"
+  },
+  "error": {
+    "error": {
+      "type": "invalid_request",
+      "code": "outside_contact_hours",
+      "message": "Not sent outside contact hours.",
+      "details": {
+        "outcome": "not_sent",
+        "sent": false,
+        "charged": false,
+        "safe_to_retry": false,
+        "contact_hours": {
+          "next_eligible_at": "2026-12-01T14:00:00Z"
+        }
+      },
+      "doc_url": "https://docs.nixflex.com/errors/outside_contact_hours"
+    }
+  }
+}

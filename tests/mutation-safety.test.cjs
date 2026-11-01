@@ -39,13 +39,12 @@ test('all resource methods still route through one successful request',async()=>
   ()=>c.campaigns.create({}),()=>c.campaigns.launch('c'),
   ()=>c.phoneNumbers.import({phone_number:phone,agent_id:'a',twilio_sid:'ACfixture',twilio_token:'fixture'}),
   ()=>c.phoneNumbers.list(),()=>c.phoneNumbers.update(phone,{}),()=>c.phoneNumbers.delete(phone),
-  ()=>c.phoneNumbers.setMonitor(phone,true),()=>c.phoneNumbers.getMonitor(phone),()=>c.phoneNumbers.setWebCalls(phone,false),()=>c.phoneNumbers.getWebCalls(phone),
+  ()=>c.phoneNumbers.setWebCalls(phone,false),()=>c.phoneNumbers.getWebCalls(phone),
   ()=>c.sms.send({}),()=>c.sms.campaigns.create({}),()=>c.sms.campaigns.launch('c'),()=>c.sms.campaigns.list(),()=>c.sms.campaigns.get('c'),()=>c.sms.campaigns.delete('c'),
   ()=>c.keys.rotate(),()=>c.usage.get(),()=>c.webhooks.set(phone,'https://example.test'),()=>c.webhooks.get(phone),()=>c.webhooks.delete(phone),
-  ...['storage','llm','tts'].flatMap(k=>[()=>c[k].set({}),()=>c[k].get(),()=>c[k].delete()]),
   ()=>c.callers.get(phone,phone),()=>c.callers.set(phone,phone,{name:'Test'}),()=>c.callers.import(phone,[]),()=>c.callers.delete(phone,phone),
  ];
- try{for(const call of calls)a.deepEqual(await call(),{ok:true});a.equal(seen.length,calls.length);
+ try{for(const k of ['storage','llm','tts'])a.equal(c[k],undefined);a.equal(c.phoneNumbers.setMonitor,undefined);a.equal(c.phoneNumbers.getMonitor,undefined);for(const call of calls)a.deepEqual(await call(),{ok:true});a.equal(seen.length,calls.length);
   for(const verb of ['GET','POST','PUT','PATCH','DELETE'])a.ok(seen.some(x=>x[0]===verb));
  }finally{global.fetch=original;}
 });

@@ -28,7 +28,7 @@ test('phone number + is URL-encoded in every path', async () => {
   const c = new Nixflex({ apiKey: 'a:b', baseUrl: url });
   await c.phoneNumbers.update('+447446466847', { sms_reply_enabled: true });
   await c.phoneNumbers.delete('+447446466847');
-  await c.phoneNumbers.setMonitor('+447446466847', true);
+  assert.strictEqual(c.phoneNumbers.setMonitor, undefined);
   await c.webhooks.set('+447446466847', 'https://x.com/hook');
   srv.close();
   for (const p of paths) {
@@ -65,15 +65,14 @@ test('monitor + web-calls toggles hit /integrations paths; webhook slot 2 routes
     res.end(JSON.stringify({ ok: true }));
   });
   const c = new Nixflex({ apiKey: 'a:b', baseUrl: url });
-  await c.phoneNumbers.setMonitor('+441', true);
+  assert.strictEqual(c.phoneNumbers.setMonitor, undefined);
   await c.phoneNumbers.setWebCalls('+441', false);
   await c.webhooks.set('+441', 'https://x.com/h', 2);
   await c.webhooks.delete('+441', 1);
   srv.close();
-  assert.ok(seen[0].startsWith('PUT /v1/integrations/monitor/number/'), seen[0]);
-  assert.ok(seen[1].startsWith('PUT /v1/integrations/web-calls/number/'), seen[1]);
-  assert.ok(seen[2].startsWith('PUT /v1/integrations/webhook2/number/'), 'slot 2 must route to webhook2: ' + seen[2]);
-  assert.ok(seen[3].startsWith('DELETE /v1/integrations/webhook/number/'), seen[3]);
+  assert.ok(seen[0].startsWith('PUT /v1/integrations/web-calls/number/'), seen[0]);
+  assert.ok(seen[1].startsWith('PUT /v1/integrations/webhook2/number/'), 'slot 2 must route to webhook2: ' + seen[1]);
+  assert.ok(seen[2].startsWith('DELETE /v1/integrations/webhook/number/'), seen[2]);
 });
 
 test('campaigns + usage route correctly with query params', async () => {

@@ -41,7 +41,7 @@ export interface AgentWarning { code: 'unknown_fields'; fields: string[]; messag
 export interface AgentCreateParams extends AgentContractSettings {
   /** Display name (max 200 chars). Default "Untitled Agent". */
   name?: string;
-  /** The AI's instructions (max 16000 chars ~ 4000 tokens). Over-limit is rejected with `prompt_too_long`. */
+  /** Instructions: 3,000 canonical tokens with Knowledge enabled (100,000-character intake bound); legacy mode 16,000 characters. Changed/new prompts are checked by the server; unchanged same-agent prompts may be grandfathered. */
   system_prompt?: string;
   /** First line spoken on inbound calls. */
   welcome_message?: string;

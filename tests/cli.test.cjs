@@ -24,7 +24,8 @@ test('cli: built binary exists and reports the package version', () => {
 test('cli: help lists every command group', () => {
   const r = run(['--help']);
   assert.strictEqual(r.status, 0);
-  for (const g of ['login', 'agents list', 'calls create', 'campaigns create', 'numbers list', 'callers set', 'callers import', 'sms send', 'sms campaigns', 'webhooks set', 'keys rotate', 'storage set', 'llm', 'tts', 'mcp setup', 'doctor', 'completion']) {
+  for(const removed of ['storage set','llm set','tts set','numbers monitor','calls billing'])assert.ok(!r.stdout.includes(removed));
+  for (const g of ['login', 'agents list', 'calls create', 'campaigns create', 'numbers list', 'callers set', 'callers import', 'sms send', 'sms campaigns', 'webhooks set', 'keys rotate', 'mcp setup', 'doctor', 'completion']) {
     assert.ok(r.stdout.includes(g), 'help is missing: ' + g);
   }
 });
@@ -59,8 +60,8 @@ test('cli: package bin points at the built file', () => {
 test('cli: every SDK method is reachable from the CLI', () => {
   const resDir = path.join(__dirname, '..', 'src', 'resources');
   const src = fs.readdirSync(resDir).filter((f) => f.endsWith('.ts')).map((f) => fs.readFileSync(path.join(resDir, f), 'utf8')).join('\n');
-  const groupOf = { Agents: 'agents', Calls: 'calls', Campaigns: 'campaigns', PhoneNumbers: 'numbers', Callers: 'callers', Sms: 'sms', SmsCampaigns: 'sms campaigns', Keys: 'keys', UsageResource: 'usage', Webhooks: 'webhooks', Storage: 'storage', Llm: 'llm', Tts: 'tts', Organisation: 'organisation' };
-  const rename = { deleteAll: 'delete-all', setMonitor: 'monitor', getMonitor: 'monitor', setWebCalls: 'web-calls', getWebCalls: 'web-calls' };
+  const groupOf = { Agents: 'agents', Calls: 'calls', Campaigns: 'campaigns', PhoneNumbers: 'numbers', Callers: 'callers', Sms: 'sms', SmsCampaigns: 'sms campaigns', Keys: 'keys', UsageResource: 'usage', Webhooks: 'webhooks', Organisation: 'organisation' };
+  const rename = { deleteAll: 'delete-all', setWebCalls: 'web-calls', getWebCalls: 'web-calls' };
   const skip = new Set(['Webhooks.verify']); // local crypto helper, not an API call
   const help = run(['--help']).stdout;
   const classes = src.split(/export class /).slice(1);

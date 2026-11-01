@@ -26,6 +26,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
+import { recipientField, kitFlags, contactFields, smsPage } from './kit-fields.js';
 import Nixflex, { NixflexError } from '../index.js';
 import { errorOutput } from '../error-output.js';
 import { readNumber } from './number-reads.js';
@@ -175,6 +176,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
     for (const [k, val] of Object.entries(r)) {
       if (k === 'phone' || val === '') continue;
       if (k === 'prompt_override' && allowOverride) { rec.prompt_override = val; continue; }
+      if (recipientField(rec, k, val)) continue;
       v[k] = val;
     }
     if (Object.keys(v).length) rec.variables = v;
@@ -183,7 +185,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
 }
 
 // ---------- help ----------
-const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'storage', 'llm', 'tts', 'organisation'];
+const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation'];
 const HELP = `nixflex ${VERSION} - the Nixflex voice AI platform from your terminal
 
 USAGE  nixflex <group> <command> [args] [--json] [--key KEY] [--base-url URL]
@@ -216,8 +218,7 @@ CALLS
   calls get <call_id>
   calls history [--number +44...] [--outcome failed] [--period month] [--cursor CURSOR]
   calls read <call_id>            nullable detail, including retained metadata
-  calls recording <call_id>       recording status and five-minute link
-  calls billing <call_id>         existing AI/free-human billing proof
+  calls recording <call_id>       recording status and expires_at-based link
   calls delete <call_id> --confirm
   calls delete-all --confirm       every call and recording on the account
 
@@ -235,7 +236,6 @@ NUMBERS
   numbers update <number> [--sms-reply] [--sms-prompt] [--dtmf] [--set k=v ...]
   numbers move <number> --agent ID   (also: numbers update <number> --agent ID)
   numbers delete <number> --confirm
-  numbers monitor <number> [get|on|off]
   numbers web-calls <number> [get|on|off]
   Number boolean --set fields: inbound_enabled, outbound_enabled, sms_reply_enabled,
     web_agent_enabled, web_calls_enabled, web_functions_enabled, monitor_enabled.
@@ -259,11 +259,6 @@ WEBHOOKS (per number)
   webhooks set <number> <url> [--slot 1|2]
   webhooks get <number> [--slot 1|2]
   webhooks delete <number> [--slot 1|2] --confirm
-
-BRING YOUR OWN
-  storage set --set k=v ...      storage get      storage delete --confirm
-  llm set --set k=v ...          llm get          llm delete --confirm
-  tts set --set k=v ...          tts get          tts delete --confirm
 
 MCP
   mcp setup <claude|cursor>          safe MCP setup (Claude Code/Codex in run 3; VS Code retired)
@@ -303,6 +298,7 @@ async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
+      ...kitFlags,
       ...agentListFlags,
       ...callReadFlags,
       'mcp-local': { type: 'string' },
@@ -377,7 +373,6 @@ async function main(): Promise<void> {
     if (cmd === 'get') { if (!a1) fail('agents get <agent_id>'); out(await client.agents.get(a1)); return; }
     if (cmd === 'create') {
       const body = bodyFrom(values, { name: s('name'), system_prompt: textOrFile(s('prompt')), voice_id: s('voice'), language: s('language') });
-      if (!body.name || !body.system_prompt) fail('agents create --name NAME --prompt TEXT|@file [--set k=v ...]');
       out(await client.agents.create(body as never)); return;
     }
     if (cmd === 'update') {
@@ -396,9 +391,9 @@ async function main(): Promise<void> {
 
   // --- calls ---
   if (group === 'calls') {
-    if (['history','read','recording','billing'].includes(cmd)) { out(await callRead(client, cmd, a1, values)); return; }
+    if (['history','read','recording'].includes(cmd)) { out(await callRead(client, cmd, a1, values)); return; }
     if (cmd === 'create') {
-      const body = callCreateBody(bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from') }), vars(values.var as string[] | undefined));
+      const body = callCreateBody(bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from'), ...contactFields(values) }), vars(values.var as string[] | undefined));
       if (!body.agent_id || !body.to_number || !body.prompt) fail('calls create --agent ID --to +44... --prompt TEXT|@file [--from] [--var k=v] [--wait]');
       const created = await client.calls.create(body as never);
       if (!values.wait) { out(created); return; }
@@ -414,7 +409,7 @@ async function main(): Promise<void> {
       }
       fail('still in progress after the timeout - `nixflex calls get ' + id + '` later');
     }
-    if (cmd === 'list') { const q: Record<string, unknown> = {}; if (limit) q.limit = limit; if (s('agent')) q.agent_id = s('agent'); out(await client.calls.list(q as never)); return; }
+    if (cmd === 'list') { const q: Record<string, unknown> = {}; if (limit) q.limit = limit; if (s('agent')) q.agent_id = s('agent'); out(s('agent') ? await client.calls.history({agent: s('agent'), limit}) : await client.calls.list(q as never)); return; }
     if (cmd === 'get') { if (!a1) fail('calls get <call_id>'); out(await client.calls.get(a1)); return; }
     if (cmd === 'delete') {
       if (!a1) fail('calls delete <call_id> --confirm');
@@ -422,7 +417,7 @@ async function main(): Promise<void> {
       out(await client.calls.delete(a1)); return;
     }
     if (cmd === 'delete-all') {
-      if (!confirmed) { out({ would_delete: 'EVERY call, recording and SMS record on this account', hint: 'add --confirm to proceed - this cannot be undone' }); return; }
+      if (!confirmed) { out({ would_delete: 'call records and their tracked recordings on this account (not SMS; safety holds may refuse cleanup)', hint: 'add --confirm to proceed - this cannot be undone' }); return; }
       out(await client.calls.deleteAll()); return;
     }
     fail('calls: create | list | get | delete | delete-all');
@@ -462,18 +457,16 @@ async function main(): Promise<void> {
       if (!confirmed) { out({ would_delete: 'number ' + a1 + ' from Nixflex (your carrier keeps it and keeps billing it)', hint: 'add --confirm to proceed' }); return; }
       out(await client.phoneNumbers.delete(a1)); return;
     }
-    if (cmd === 'monitor' || cmd === 'web-calls') {
+    if (cmd === 'web-calls') {
       if (!a1) fail('numbers ' + cmd + ' <number> [get|on|off]');
       const action = a2 || 'get';
-      const isMon = cmd === 'monitor';
-      if (action === 'get') { out(isMon ? await client.phoneNumbers.getMonitor(a1) : await client.phoneNumbers.getWebCalls(a1)); return; }
+      if (action === 'get') { out(await client.phoneNumbers.getWebCalls(a1)); return; }
       if (action === 'on' || action === 'off') {
-        if (isMon && action === 'on') note('note: enabling is free; the listening premium applies only when a live listener actually attaches to a call');
-        out(isMon ? await client.phoneNumbers.setMonitor(a1, action === 'on') : await client.phoneNumbers.setWebCalls(a1, action === 'on')); return;
+        out(await client.phoneNumbers.setWebCalls(a1, action === 'on')); return;
       }
       fail('numbers ' + cmd + ' <number> [get|on|off]');
     }
-    fail('numbers: list | get | usage | import | update | delete | monitor | web-calls');
+    fail('numbers: list | get | usage | import | update | delete | web-calls');
   }
 
   // --- callers (caller context) ---
@@ -510,24 +503,24 @@ async function main(): Promise<void> {
   // --- sms ---
   if (group === 'sms') {
     if (cmd === 'send') {
-      const body = bodyFrom(values, { agent_id: s('agent'), from_number: s('from'), to: s('to'), message: textOrFile(s('message')) });
+      const body = bodyFrom(values, { agent_id: s('agent'), from_number: s('from'), to: s('to'), message: textOrFile(s('message')), ...contactFields(values) });
       if (!body.agent_id || !body.from_number || !body.to || !body.message) fail('sms send --agent ID --from +44... --to +44... --message TEXT');
       out(await client.sms.send(body as never)); return;
     }
     if (cmd === 'campaigns') {
       const sub = a1; const id = a2;
       if (sub === 'create') {
-        const body = bodyFrom(values, { agent_id: s('agent'), from_number: s('from'), message: textOrFile(s('message')), name: s('name') });
+        const body = bodyFrom(values, { agent_id: s('agent'), from_number: s('from'), message_template: textOrFile(s('message')), name: s('name') });
         if (s('csv')) body.recipients = recipientsFromCsv(s('csv') as string, false);
-        if (!body.agent_id || !body.from_number || !body.message || !Array.isArray(body.recipients)) fail('sms campaigns create --agent ID --from +44... --message TEXT|@file --csv people.csv');
+        if (!body.agent_id || !body.from_number || !body.message_template || !Array.isArray(body.recipients)) fail('sms campaigns create --agent ID --from +44... --message TEXT|@file --csv people.csv');
         out(await client.sms.campaigns.create(body as never)); return;
       }
       if (sub === 'launch') { if (!id) fail('sms campaigns launch <id>'); out(await client.sms.campaigns.launch(id)); return; }
-      if (sub === 'list') { const q: Record<string, unknown> = {}; if (limit) q.limit = limit; if (s('status')) q.status = s('status'); const r = await client.sms.campaigns.list(q as never); out(JSON_MODE ? r : ((r as { campaigns?: unknown[] }).campaigns || r)); return; }
-      if (sub === 'get') { if (!id) fail('sms campaigns get <id>'); out(await client.sms.campaigns.get(id)); return; }
+      if (sub === 'list') { const q: Record<string, unknown> = {}; if (limit) q.limit = limit; if (s('status')) q.status = s('status'); if (s('before')) q.before = s('before'); const r = await client.sms.campaigns.list(q as never); out(JSON_MODE ? r : ((r as { campaigns?: unknown[] }).campaigns || r)); return; }
+      if (sub === 'get') { if (!id) fail('sms campaigns get <id>'); out(await client.sms.campaigns.get(id, smsPage(values))); return; }
       if (sub === 'delete') {
         if (!id) fail('sms campaigns delete <id> --confirm');
-        if (!(await preview('sms campaign ' + id + ' (pending recipients will not be messaged)', () => client.sms.campaigns.get(id)))) return;
+        if (!(await preview('sms campaign ' + id + ' (active campaigns are refused; deletion is not cancellation)', () => client.sms.campaigns.get(id)))) return;
         out(await client.sms.campaigns.delete(id)); return;
       }
       fail('sms campaigns: create | launch | list | get | delete');
@@ -547,21 +540,6 @@ async function main(): Promise<void> {
     fail('webhooks: set | get | delete');
   }
 
-  // --- bring your own: storage / llm / tts (same shape) ---
-  if (group === 'storage' || group === 'llm' || group === 'tts') {
-    const res = client[group] as unknown as { set: (b: never) => Promise<unknown>; get: () => Promise<unknown>; delete: () => Promise<unknown> };
-    if (cmd === 'set') {
-      const body = bodyFrom(values);
-      if (Object.keys(body).length === 0) fail(group + ' set --set field=value ... (or --body @file.json) - see https://docs.nixflex.com/advanced/your-own-' + group);
-      out(await res.set(body as never)); return;
-    }
-    if (cmd === 'get') { out(await res.get()); return; }
-    if (cmd === 'delete') {
-      if (!(await preview('your own ' + group + ' configuration (calls fall back to Nixflex)', () => res.get()))) return;
-      out(await res.delete()); return;
-    }
-    fail(group + ': set | get | delete');
-  }
 
   fail('unknown command "' + group + '". Run `nixflex --help`.');
 }

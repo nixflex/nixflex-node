@@ -1,8 +1,8 @@
 # Nixflex Node.js SDK
 
-## MCP setup foundation (local 0.9.1 candidate, not published)
+## MCP setup foundation (local 0.10.0 candidate, not published)
 
-The SDK's API behaviour is unchanged. MCP setup now requires Node 22+ and uses
+This K1 candidate corrects API requests and public scope (see CHANGELOG). MCP setup requires Node 22+ and uses
 secret-free, version-pinned OS-specific launchers. Supported tools are Claude
 Desktop, Claude Code, Codex and Cursor; VS Code setup is retired. Run 1 writes only
 Claude Desktop/Cursor configs; the other installers are run 3. The shared builders
@@ -59,9 +59,9 @@ const call = await client.calls.create({
 | Resource | Methods |
 |---|---|
 | `client.agents` | `create` `list` `get` `update` `delete` `iter` |
-| `client.calls` | `create` (outbound) `list` `get` `iter` |
+| `client.calls` | `create` (outbound) `list` `get` `history` `read` `recording` `delete` `deleteAll` `iter` |
 | `client.campaigns` | `create` `launch` — voice batch campaigns with scheduling windows |
-| `client.phoneNumbers` | `import` `list` `update` `delete` `setMonitor` `getMonitor` `setWebCalls` `getWebCalls` |
+| `client.phoneNumbers` | `import` `list` `get` `usage` `move` `update` `delete` `setWebCalls` `getWebCalls` |
 | `client.sms` | `send` + `campaigns.create/launch/list/get/delete` |
 | `client.keys` | `rotate` (Stripe-style: key_id stays, secret rotates) |
 | `client.usage` | `get` — minutes, calls, SMS, balance |
@@ -107,7 +107,7 @@ app.post('/nixflex/calls', express.raw({ type: 'application/json' }), (req, res)
   const ok = verifyWebhookSignature(
     req.body,                                  // raw Buffer
     req.get('x-nixflex-signature'),
-    process.env.NIXFLEX_KEY_SECRET             // the nxfs_... half of your key
+    process.env.NIXFLEX_WEBHOOK_SIGNING_SECRET // organisation signing secret; independent of API-key rotation
   );
   if (!ok) return res.sendStatus(400);
 
@@ -123,10 +123,10 @@ Returns `false` for a tampered body, wrong secret, malformed header, or a signat
 
 ```js
 await client.calls.delete(callId);   // one call: record, transcript, recording
-await client.calls.deleteAll();      // everything on the key
+await client.calls.deleteAll();      // guarded call-data deletion; not SMS/account erasure
 ```
 
-Both are immediate and irreversible — fetch anything you need to keep first.
+Both can refuse busy/unsettled work or report pending cleanup. Read the result; never claim deletion from an accepted request alone.
 
 ## Docs
 
@@ -136,7 +136,7 @@ Both are immediate and irreversible — fetch anything you need to keep first.
 `web_calls_effective` and `telnyx_key_status`. No credentials/internal IDs.
 `phoneNumbers.list({agent_id, provider, limit, cursor})` opts into paging with
 limit/cursor; count remains returned rows. Follow next_cursor until null, keeping
-account/filters unchanged. Legacy list and dedicated monitor/web-calls methods stay.
+account/filters unchanged. Legacy list and dedicated web-calls methods stay. Dedicated monitoring methods are not public.
 
 All seven PATCH switches are typed booleans: `inbound_enabled`, `outbound_enabled`,
 `sms_reply_enabled`, `web_agent_enabled`, `web_calls_enabled`,
@@ -167,3 +167,7 @@ can refuse cleanup and is not a promise of instant account/SMS/all-copy erasure.
 Full API reference: **https://docs.nixflex.com**
 
 Release history: [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE).
+
+## K1 contract and migration
+
+See [CHANGELOG.md](CHANGELOG.md) for corrected fields, removals, errors, retry rules and defaults.

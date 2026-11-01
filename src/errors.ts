@@ -14,6 +14,7 @@ export interface NixflexAPIErrorBody {
     message: string;
     doc_url?: string;
     details?: Record<string, unknown>;
+    request_id?: string;
   };
 }
 
@@ -40,7 +41,13 @@ export class NixflexError extends Error {
     this.type = e?.type || 'error';
     this.docUrl = e?.doc_url;
     this.details = e?.details || {};
-    this.requestId = requestId;
+    this.requestId = requestId || e?.request_id || (typeof this.details.request_id === 'string' ? this.details.request_id : undefined);
+  }
+  get doc_url(): string | null { return this.docUrl ?? null; }
+  get request_id(): string | null { return this.requestId ?? null; }
+  toJSON() {
+    return { error: { type: this.type, code: this.code, message: this.message,
+      details: this.details, doc_url: this.doc_url, status: this.status, request_id: this.request_id } };
   }
 }
 

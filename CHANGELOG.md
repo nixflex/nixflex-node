@@ -1,3 +1,37 @@
+# 0.10.0 — K1, 1 November 2026 (unpublished)
+
+Removed calls.billing, phoneNumbers.setMonitor/getMonitor, storage/llm/tts.set/get/delete; CLI calls billing, numbers monitor and storage/llm/tts commands.
+Reason: **non-public by Fahim decision**. Engine endpoints stay unchanged.
+
+K1 corrects SMS campaign `message_template` and `scheduled_date`, root recipient
+country/timezone, explicit policy values, single-contact location/context, SMS
+cursors and envelopes, agent empty-create/defaults, and recording `expires_at`.
+New agents use engine defaults: 300-second maximum, 10-second silence hang-up,
+dynamic greeting ON. Omission uses engine defaults; explicit values are preserved.
+With agent knowledge enabled, prompt admission is 3,000 tokens; the legacy OFF
+path has its 16,000-character limit. This release adds no prompt-measurement methods.
+Use the organisation webhook signing secret, independent of API-key rotation.
+
+All kits expose errors as `{error:{type,code,message,details,doc_url,status,request_id}}`.
+Node uses `toJSON()`, Python `to_dict()`, CLI/MCP use JSON. Missing metadata is null.
+Timeout defaults to 30 seconds. GET retries once (Node/Python configurable, capped
+at three); mutations never retry automatically, even DELETE or 429. A lost or
+malformed mutation reply is outcome unknown: check before retrying. Explicit
+not-sent proof stays visible. Do not wrap mutations in blind retry loops.
+Launch acknowledges scheduling; recipient-local gates still apply. SMS deletion
+refuses active work, returns the engine message and never promises cancellation.
+Recording availability may be pending/unavailable; use expires_at, not a fixed
+five-minute lifetime (private mode 600 seconds, compatibility mode 300).
+Legacy SDK calls.list(agent_id=...) now refuses the ineffective filter; use history.
+The CLI routes calls list --agent to history. MCP filtered lists already use history.
+Dedicated billing, monitoring, BYO and personal-auth actions are non-public.
+Number PATCH monitor_enabled remains an existing public setting; it is not a listener operation.
+Engine endpoints are unchanged. This release is local and not published.
+
+TypeScript: from_number is now required for SMS. Use message_template and scheduled_date in new code; old JavaScript message/scheduled_at aliases translate only when unambiguous. SMS detail is {campaign,recipients,messages,pagination}, not a flat campaign. Raw byte/idempotency/revision transport is preparation only; no knowledge endpoint wrappers were added.
+
+## Historical releases
+
 ## 0.8.0
 - CLI now covers every SDK method: calls delete/delete-all, campaigns create (CSV) + launch, numbers import/delete/monitor/web-calls, sms campaigns, webhooks, keys rotate, storage/llm/tts. A guard test fails the build if an SDK method has no command.
 - `--set field=value` (repeatable) and `--body @file.json` on every create/update/set - new API fields need no CLI update.

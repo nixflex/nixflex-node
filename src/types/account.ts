@@ -32,6 +32,9 @@ export interface Usage {
   max_concurrent: number;
   peak_concurrent_this_month: number;
   rejected_at_cap_this_month: number;
+  occupied_call_slots?: number;
+  capacity_source?: 'owned_reservations';
+  capacity_measured_since?: string | null;
 }
 
 export interface WebhookConfigResponse {

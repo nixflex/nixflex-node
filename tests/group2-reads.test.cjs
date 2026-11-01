@@ -9,8 +9,8 @@ test('Group2 SDK encoded get, paged filters, legacy list and all seven booleans 
     await client.phoneNumbers.list({agent_id:'a',provider:'telnyx',limit:1,cursor:'opaque'});a.equal(seen[1][0].search,'?agent_id=a&provider=telnyx&limit=1&cursor=opaque');
     await client.phoneNumbers.list();a.equal(seen[2][0].search,'');
     await client.phoneNumbers.update('+12025550100',flags);a.deepEqual(JSON.parse(seen[3][1].body),flags);
-    await client.phoneNumbers.getMonitor('+12025550100');await client.phoneNumbers.getWebCalls('+12025550100');
-    a.match(seen[4][0].pathname,/integrations\/monitor/);a.match(seen[5][0].pathname,/integrations\/web-calls/);
+    a.equal(client.phoneNumbers.getMonitor,undefined);await client.phoneNumbers.getWebCalls('+12025550100');
+    a.equal(seen.length,5);a.match(seen[4][0].pathname,/integrations\/web-calls/);
   } finally {global.fetch=original;}
 });
 function cli(args,base){return new Promise((resolve,reject)=>{

@@ -2,6 +2,7 @@
 // src/resources/phone-numbers.ts
 // ============================================
 import type { HttpClient, RequestOptions } from '../client.js';
+import { smsCampaignInput } from '../sms-campaign-input.js';
 import { readNumberUsage } from './number-usage.js';
 import { moveNumber, type PhoneNumberMoveParams, type PhoneNumberMoveResponse } from './number-move.js';
 import type { NumberUsageParams, NumberUsageResponse } from '../types/number-usage.js';
@@ -65,18 +66,6 @@ export class PhoneNumbers {
     return this.http.request('DELETE', `/phone-numbers/${enc(phoneNumber)}`, undefined, undefined, opts);
   }
 
-  /** Turn live call monitoring on/off for a number (off by default).
-   * Enabling alone is free. The listening premium applies only when a live
-   * listener actually attaches to the call (inbound or outbound). */
-  setMonitor(phoneNumber: string, enabled: boolean, opts?: RequestOptions): Promise<MonitorToggleResponse> {
-    return this.http.request('PUT', `/integrations/monitor/number/${enc(phoneNumber)}`, { enabled }, undefined, opts);
-  }
-
-  /** Current monitoring state for a number. */
-  getMonitor(phoneNumber: string, opts?: RequestOptions): Promise<MonitorToggleResponse> {
-    return this.http.request('GET', `/integrations/monitor/number/${enc(phoneNumber)}`, undefined, undefined, opts);
-  }
-
   /** Enable/disable browser (web) calls for a number (off by default).
    * Enabling alone is free. Premium applies to actual browser calls,
    * not ordinary phone calls just because this switch is enabled. */
@@ -96,7 +85,7 @@ export class PhoneNumbers {
 import type {
   SmsSendParams, SmsSendResponse, SmsCampaignCreateParams, SmsCampaign,
   SmsCampaignListResponse, SmsCampaignLaunchResponse, SmsCampaignDeleteResponse,
-  SmsCampaignStatus,
+  SmsCampaignStatus, SmsCampaignDetail, SmsCampaignDetailParams, SmsCampaignCreateResponse,
 } from '../types/sms.js';
 
 export class SmsCampaigns {
@@ -105,28 +94,27 @@ export class SmsCampaigns {
   /** Create a one-time SMS broadcast ({{variable}} templating per recipient,
    * up to 10,000 recipients). from_number may be on either carrier (Twilio or
    * Telnyx) and must be a number on your own account. */
-  create(params: SmsCampaignCreateParams, opts?: RequestOptions): Promise<SmsCampaign> {
-    return this.http.request('POST', '/sms/campaigns', params, undefined, opts);
+  create(params: SmsCampaignCreateParams, opts?: RequestOptions): Promise<SmsCampaignCreateResponse> {
+    return this.http.request('POST', '/sms/campaigns', smsCampaignInput(params), undefined, opts);
   }
 
-  /** Launch a draft/scheduled campaign immediately. */
+  /** Request launch; scheduling and recipient contact-hour gates still apply. */
   launch(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignLaunchResponse> {
     return this.http.request('POST', `/sms/campaigns/${encodeURIComponent(campaignId)}/launch`, undefined, undefined, opts);
   }
 
   /** All campaigns, newest first, with live-computed delivery counts. */
-  list(params: { status?: SmsCampaignStatus; limit?: number } = {}, opts?: RequestOptions): Promise<SmsCampaignListResponse> {
-    return this.http.request('GET', '/sms/campaigns', undefined, { status: params.status, limit: params.limit }, opts);
+  list(params: { status?: SmsCampaignStatus; limit?: number; before?: string } = {}, opts?: RequestOptions): Promise<SmsCampaignListResponse> {
+    return this.http.request('GET', '/sms/campaigns', undefined, { status: params.status, limit: params.limit, before: params.before }, opts);
   }
 
-  /** One campaign with per-recipient statuses. Twilio 'sent' (handed to
-   * carrier, never confirmed on the handset) counts as FAILED, not delivered. */
-  get(campaignId: string, opts?: RequestOptions): Promise<SmsCampaign> {
-    return this.http.request('GET', `/sms/campaigns/${encodeURIComponent(campaignId)}`, undefined, undefined, opts);
+  /** Detail envelope with independent recipient/message cursors; sent is not failed. */
+  get(campaignId: string, opts?: RequestOptions & SmsCampaignDetailParams): Promise<SmsCampaignDetail> {
+    return this.http.request('GET', `/sms/campaigns/${encodeURIComponent(campaignId)}`, undefined,
+      { limit: opts?.limit, recipient_cursor: opts?.recipient_cursor, message_cursor: opts?.message_cursor }, opts);
   }
 
-  /** Cancel a scheduled/running campaign. Already-sent messages cannot be
-   * recalled; cancelled_count = pending recipients that will not be messaged. */
+  /** Delete an inactive/finished campaign. Active campaigns are refused; this never cancels or recalls sends. */
   delete(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignDeleteResponse> {
     return this.http.request('DELETE', `/sms/campaigns/${encodeURIComponent(campaignId)}`, undefined, undefined, opts);
   }
@@ -175,70 +163,6 @@ export class UsageResource {
 }
 
 // ============================================
-// Your own recording storage (BYO storage)
-// ============================================
-import type { StorageConfig, StorageSetParams, StorageSetResponse, StorageDeleteResponse } from '../types/account.js';
-export class Storage {
-  constructor(private readonly http: HttpClient) {}
-  /** Connect your own S3-compatible bucket for call recordings (data residency).
-   * The connection is verified with a probe write BEFORE saving - broken
-   * credentials are rejected, never stored. Recordings then upload to your
-   * bucket and Nixflex keeps no copy; recording_url becomes a byo: path. */
-  set(params: StorageSetParams, opts?: RequestOptions): Promise<StorageSetResponse> {
-    return this.http.request('PUT', '/account/storage', params, undefined, opts);
-  }
-  /** Current storage configuration. The secret is never included. */
-  get(opts?: RequestOptions): Promise<StorageConfig> {
-    return this.http.request('GET', '/account/storage', undefined, undefined, opts);
-  }
-  /** Disconnect and clear. Recordings return to Nixflex EU storage from the
-   * next call; files already in your bucket are untouched - they are yours. */
-  delete(opts?: RequestOptions): Promise<StorageDeleteResponse> {
-    return this.http.request('DELETE', '/account/storage', undefined, undefined, opts);
-  }
-}
-// ============================================
-// Your own LLM + your own TTS (BYO providers)
-// ============================================
-import type { LlmConfig, LlmSetParams, LlmSetResponse, LlmDeleteResponse, TtsConfig, TtsSetParams, TtsSetResponse, TtsDeleteResponse } from '../types/account.js';
-export class Llm {
-  constructor(private readonly http: HttpClient) {}
-  /** Connect an OpenAI-compatible model. Verified BEFORE saving with a real
-   * completion + a tool-calling round trip (models without tool calling are
-   * refused). Calls your model serves bill at a $0.015/min discount; if it
-   * fails on a call the standard stack takes over and that call bills standard. */
-  set(params: LlmSetParams, opts?: RequestOptions): Promise<LlmSetResponse> {
-    return this.http.request('PUT', '/account/llm', params, undefined, opts);
-  }
-  /** Current LLM configuration. The provider key is never included. */
-  get(opts?: RequestOptions): Promise<LlmConfig> {
-    return this.http.request('GET', '/account/llm', undefined, undefined, opts);
-  }
-  /** Disconnect. Calls return to the standard stack and rate from the next call. */
-  delete(opts?: RequestOptions): Promise<LlmDeleteResponse> {
-    return this.http.request('DELETE', '/account/llm', undefined, undefined, opts);
-  }
-}
-export class Tts {
-  constructor(private readonly http: HttpClient) {}
-  /** Connect your voice provider (elevenlabs or cartesia). Verified BEFORE
-   * saving with one real synthesis using the exact voice ID. Phone calls only -
-   * web calls keep the standard voice. Calls your voice serves bill at a
-   * $0.02/min discount; on failure the standard voice takes over and that call
-   * bills the standard TTS rate. */
-  set(params: TtsSetParams, opts?: RequestOptions): Promise<TtsSetResponse> {
-    return this.http.request('PUT', '/account/tts', params, undefined, opts);
-  }
-  /** Current TTS configuration. The provider key is never included. */
-  get(opts?: RequestOptions): Promise<TtsConfig> {
-    return this.http.request('GET', '/account/tts', undefined, undefined, opts);
-  }
-  /** Disconnect. Calls return to the standard voice and rate from the next call. */
-  delete(opts?: RequestOptions): Promise<TtsDeleteResponse> {
-    return this.http.request('DELETE', '/account/tts', undefined, undefined, opts);
-  }
-}
-// ============================================
 // Per-number webhook integration
 // ============================================
 import type { WebhookConfigResponse } from '../types/account.js';
@@ -248,7 +172,7 @@ export class Webhooks {
   constructor(private readonly http: HttpClient) {}
 
   /** Verify a webhook delivery's X-Nixflex-Signature header. Pass the RAW
-   * request body (string or Buffer) and your key_secret. Returns true only
+   * request body (string or Buffer) and the organisation signing secret (independent of API-key rotation). Returns true only
    * for an authentic, fresh signature. See webhook-verify.ts. */
   verify(rawBody: string | Buffer, signatureHeader: string | null | undefined, keySecret: string, options?: import('../webhook-verify.js').VerifyOptions): boolean {
     return verifyWebhookSignature(rawBody, signatureHeader, keySecret, options);

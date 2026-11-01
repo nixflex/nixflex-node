@@ -28,7 +28,11 @@ export interface NixflexClientOptions {
   maxRetries?: number;
 }
 
-export interface RequestOptions {
+import { encodeRequest, type BodyOptions } from './request-body.js';
+declare const __SDK_VERSION__: string;
+export const SDK_VERSION = __SDK_VERSION__;
+
+export interface RequestOptions extends BodyOptions {
   /** Override the client timeout for this one request. */
   timeoutMs?: number;
   /** AbortSignal to cancel the request from outside. */
@@ -37,7 +41,6 @@ export interface RequestOptions {
 
 const DEFAULT_BASE_URL = 'https://api.nixflex.com';
 const DEFAULT_TIMEOUT_MS = 30_000;
-const SDK_VERSION = '0.8.0'; // bump by hand with package.json on every release (was stuck at 0.1.0 until 0.6.0)
 
 export class HttpClient {
   private readonly apiKey: string;
@@ -55,7 +58,9 @@ export class HttpClient {
     this.apiKey = opts.apiKey;
     this.baseUrl = (opts.baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '');
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    this.maxRetries = opts.maxRetries ?? 1;
+    this.maxRetries = Math.min(opts.maxRetries ?? 1, 3);
+    if (!Number.isInteger(this.maxRetries) || this.maxRetries < 0 || this.maxRetries > 3) throw new RangeError('maxRetries must be 0..3.');
+    if (!Number.isFinite(this.timeoutMs) || this.timeoutMs <= 0) throw new RangeError('timeoutMs must be positive.');
   }
 
   async request<T>(
@@ -72,6 +77,9 @@ export class HttpClient {
       }
     }
 
+    if (!path.startsWith('/') || path.startsWith('//') || /[?#\\]/.test(path)) throw new TypeError('Use a relative API path and the query argument.');
+    encodeRequest(body, reqOpts); // Validate before a request can be sent.
+    if (reqOpts?.timeoutMs !== undefined && (!Number.isFinite(reqOpts.timeoutMs) || reqOpts.timeoutMs <= 0)) throw new RangeError('timeoutMs must be positive.');
     const isRead = method === 'GET';
     let attempt = 0;
 
@@ -89,7 +97,7 @@ export class HttpClient {
           continue;
         }
         throw new NixflexConnectionError(
-          `Could not reach the Nixflex API (${(err as Error)?.message || 'network error'}). Check connectivity and https://nixflex.com/status`
+          'Could not reach the Nixflex API. Check connectivity and https://nixflex.com/status'
         );
       }
 
@@ -98,12 +106,12 @@ export class HttpClient {
         try { return (await res.json()) as T; }
         catch {
           if (!isRead) throw new NixflexOutcomeUnknownError(res.status, null,
-            res.headers.get('x-railway-request-id') || undefined);
+            res.headers.get('x-request-id') || res.headers.get('x-railway-request-id') || undefined);
           throw new NixflexConnectionError('The API read returned an incomplete or invalid JSON reply.');
         }
       }
 
-      const requestId = res.headers.get('x-railway-request-id') || undefined;
+      const requestId = res.headers.get('x-request-id') || res.headers.get('x-railway-request-id') || undefined;
       const retryAfter = parseInt(res.headers.get('retry-after') || '0', 10) || 0;
       let errBody: NixflexAPIErrorBody | null = null;
       try { errBody = (await res.json()) as NixflexAPIErrorBody; } catch { /* non-JSON error body */ }
@@ -135,17 +143,20 @@ export class HttpClient {
       else reqOpts.signal.addEventListener('abort', () => controller.abort(reqOpts.signal!.reason), { once: true });
     }
     try {
-      return await fetch(url, {
+      const res = await fetch(url, {
         method,
-        redirect: method === 'GET' ? 'follow' : 'error',
+        redirect: 'error',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          ...encodeRequest(body, reqOpts).headers,
           'User-Agent': `nixflex-node/${SDK_VERSION}`,
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: encodeRequest(body, reqOpts).body,
         signal: controller.signal,
       });
+      // Keep the deadline active through the body, including a stalled success reply.
+      const bytes = res.status === 204 ? null : await res.arrayBuffer();
+      return new Response(bytes, { status: res.status, statusText: res.statusText, headers: res.headers });
     } finally {
       clearTimeout(timer);
     }

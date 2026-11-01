@@ -15,7 +15,7 @@
 import { HttpClient, type NixflexClientOptions, type RequestOptions } from './client.js';
 import { Agents } from './resources/agents.js';
 import { Calls, Campaigns } from './resources/calls.js';
-import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks, Storage, Llm, Tts } from './resources/stage3.js';
+import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks } from './resources/stage3.js';
 import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { createKey } from './key-create.js';
@@ -41,12 +41,6 @@ export class Nixflex {
   readonly usage: UsageResource;
   /** Per-number post-call webhook configuration. */
   readonly webhooks: Webhooks;
-  /** Your own S3-compatible recording storage (data residency). */
-  readonly storage: Storage;
-  /** Your own LLM (OpenAI-compatible endpoint, verified with tool-calling probe). */
-  readonly llm: Llm;
-  /** Your own TTS (elevenlabs/cartesia, verified with a real synthesis). */
-  readonly tts: Tts;
   /** Caller context - what the agent knows about each caller on one of your numbers. */
   readonly callers: Callers;
 
@@ -61,9 +55,6 @@ export class Nixflex {
     this.keys = new Keys(http);
     this.usage = new UsageResource(http);
     this.webhooks = new Webhooks(http);
-    this.storage = new Storage(http);
-    this.llm = new Llm(http);
-    this.tts = new Tts(http);
     this.callers = new Callers(http);
   }
 
@@ -77,6 +68,8 @@ export class Nixflex {
 
 export default Nixflex;
 export type { NixflexClientOptions, RequestOptions };
+export { HttpClient, SDK_VERSION } from './client.js';
+export * from './types/campaign-policy.js';
 export * from './errors.js';
 export * from './types/agents.js';
 export * from './types/calls.js';

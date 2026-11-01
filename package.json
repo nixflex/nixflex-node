@@ -1,6 +1,6 @@
 {
   "name": "nixflex",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Official Node.js SDK for the Nixflex voice AI platform - AI phone agents, outbound campaigns, and SMS.",
   "keywords": [
     "nixflex",
@@ -9,8 +9,6 @@
     "phone",
     "telephony",
     "ai-receptionist",
-    "twilio",
-    "telnyx",
     "sms",
     "speech",
     "api-client",
@@ -26,7 +24,9 @@
   },
   "license": "MIT",
   "type": "module",
-  "bin": { "nixflex": "./dist/cli/index.js" },
+  "bin": {
+    "nixflex": "./dist/cli/index.js"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

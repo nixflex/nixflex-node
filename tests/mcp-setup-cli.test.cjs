@@ -8,7 +8,7 @@ const stage='https://nixflex-voice-engine-staging.up.railway.app',key='nxf_setup
 const binary=path.join(__dirname,'..','dist','cli','index.js');
 function fixture(){
  const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'nxf-cli-'))),pkg=path.join(root,'local package');fs.mkdirSync(pkg);
- fs.writeFileSync(path.join(pkg,'package.json'),JSON.stringify({name:'nixflex-mcp',version:'0.3.1',bin:{'nixflex-mcp':'./index.js'}}));
+ fs.writeFileSync(path.join(pkg,'package.json'),JSON.stringify({name:'nixflex-mcp',version:require('../src/cli/mcp/release.json').mcpVersion,bin:{'nixflex-mcp':'./index.js'}}));
  fs.writeFileSync(path.join(pkg,'index.js'),'// fixture only, never executed');
  const env={};for(const [k,v]of Object.entries(process.env))if(/^(path|systemroot|windir|temp|tmp)$/i.test(k))env[k]=v;
  Object.assign(env,{HOME:root,USERPROFILE:root,APPDATA:root,NIXFLEX_API_KEY:key,NIXFLEX_BASE_URL:stage});

@@ -15,7 +15,7 @@ const directory=join(work,'package'),binary=join(directory,'dist','cli','index.j
 const pkg=JSON.parse(readFileSync(join(directory,'package.json')));
 a.equal(run(process.execPath,[binary,'--version'],work).trim(),pkg.version);
 const fake=join(work,'mcp fixture');mkdirSync(fake);
-writeFileSync(join(fake,'package.json'),JSON.stringify({name:'nixflex-mcp',version:'0.3.1',bin:{'nixflex-mcp':'./index.js'}}));
+writeFileSync(join(fake,'package.json'),JSON.stringify({name:'nixflex-mcp',version:JSON.parse(readFileSync(join(root,'src/cli/mcp/release.json'))).mcpVersion,bin:{'nixflex-mcp':'./index.js'}}));
 writeFileSync(join(fake,'index.js'),'// never executed');
 const home=realpathSync(work),key='nxf_packedcli:nxfs_packedcli';
 const env={};for(const [k,v]of Object.entries(process.env))if(/^(path|systemroot|windir|temp|tmp)$/i.test(k))env[k]=v;

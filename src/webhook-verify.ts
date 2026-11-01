@@ -2,7 +2,7 @@
 // src/webhook-verify.ts
 // Verifies Nixflex webhook signatures. The engine signs every delivery:
 //   header  X-Nixflex-Signature: t=<unix_ts>,v1=<hmac_sha256_hex>
-//   payload "<timestamp>.<raw_body>"   secret: your key_secret
+//   payload "<timestamp>.<raw_body>"   secret: the organisation signing secret (independent of API-key rotation)
 // (Scheme verified against the live engine, Aug 2026.)
 // Use the RAW request body BYTES - a re-serialized JSON.stringify(body) may
 // differ from what was signed and will fail verification.

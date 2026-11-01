@@ -3,6 +3,8 @@
 // Types generated from docs.nixflex.com/api-reference/calls/* (Aug 2026).
 // ============================================
 
+import type { CampaignPolicy, CampaignValidation, RecipientLocation, ContactLocation } from './campaign-policy.js';
+import type { RecordingStatus } from './call-reads.js';
 export type CallDirection = 'inbound' | 'outbound' | 'web';
 export type CallerSentiment = 'happy' | 'neutral' | 'frustrated';
 
@@ -24,7 +26,7 @@ export interface Call {
   end_timestamp: number | null;
   /** Epoch milliseconds when ANSWERED, or null (inbound / older calls). Ring time = answered_at - start_timestamp. */
   answered_at?: number | null;
-  /** Connected duration, not necessarily AI billed time. See calls.billing() for takeover proof. */
+  /** Connected duration, not necessarily AI billed time. Amounts are returned by the API, never recalculated by the kit. */
   duration_ms: number | null;
   /** Why the call ended: completed, transferred, voicemail_detected, silence_timeout,
    * ivr_timeout, max_duration_reached, caller_hangup (inbound), callee_hangup (outbound),
@@ -46,6 +48,8 @@ export interface Call {
   bookings?: unknown[] | null;
   /** Legacy pointer; null does not prove recording was off. Use calls.recording() for state and short link. */
   recording_url: string | null;
+  recording_status?: RecordingStatus;
+  recording_endpoint?: string | null;
   recording_duration_s?: number;
   voicemail_detected?: boolean | null;
   voicemail_detection_method?: string | null;
@@ -61,7 +65,7 @@ export interface Call {
 }
 
 /** Parameters for POST /v1/calls/outbound. */
-export interface OutboundCallParams {
+export interface OutboundCallParams extends ContactLocation {
   /** The agent that handles the call. Must belong to your API key. */
   agent_id: string;
   /** Who to call, E.164 ("+447386172392", not "07386172392"). NOTE: the field is to_number, not `to` - `to` is the SMS endpoints' field. */
@@ -85,7 +89,7 @@ export interface OutboundCallResponse {
   from: string;
 }
 
-export interface BatchRecipient {
+export interface BatchRecipient extends RecipientLocation {
   phone: string;
   /** Injected as context automatically - no {{placeholders}} needed in the prompt. */
   variables?: Record<string, string>;
@@ -96,7 +100,7 @@ export interface BatchRecipient {
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
 /** Parameters for POST /v1/calls/batch. */
-export interface BatchCampaignParams {
+export interface BatchCampaignParams extends CampaignPolicy {
   agent_id: string;
   /** The call purpose for every call. Required. */
   prompt: string;
@@ -107,7 +111,7 @@ export interface BatchCampaignParams {
   name?: string;
   /** false (default): reject the whole request on any invalid phone. true: dial valid ones, list invalid in the response. */
   skip_invalid?: boolean;
-  /** 'now' (default, launches immediately) or 'schedule'. */
+  /** 'now' (default, requests launch subject to recipient gates) or 'schedule'. */
   schedule_type?: 'now' | 'schedule';
   /** YYYY-MM-DD. Required when schedule_type is 'schedule'. */
   scheduled_date?: string;
@@ -116,7 +120,7 @@ export interface BatchCampaignParams {
   /** Calling window end, minutes since midnight (1080 = 6:00pm). Overnight windows (start > end) are supported. */
   window_end_minutes?: number;
   window_days?: Weekday[];
-  /** IANA timezone the window runs in (e.g. "Europe/London"). Priority: this > the agent's timezone > Europe/London. One campaign = one timezone - split multi-country lists into separate campaigns. */
+  /** Campaign IANA timezone. Recipient country/timezone and current contact policy still gate each dispatch. */
   timezone?: string;
 }
 
@@ -126,7 +130,8 @@ export interface BatchInvalidEntry {
   row_index: number;
 }
 
-export interface BatchCreateResponse {
+export interface BatchCreateResponse extends CampaignValidation {
+  dialed?: number; queued?: number; failed?: number; message?: string;
   campaign_id: string;
   status: string;
   valid_count: number;
@@ -137,8 +142,9 @@ export interface BatchCreateResponse {
 export interface BatchLaunchResponse {
   campaign_id: string;
   status: string;
-  recipients_count: number;
-  queued_count: number;
+  enqueued?: number;
+  failed_to_enqueue?: number;
+  message?: string;
 }
 
 export interface CallDeleteResponse {

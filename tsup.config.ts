@@ -14,6 +14,7 @@ export default defineConfig([
     dts: true,
     clean: true,
     sourcemap: false,
+    define: { __SDK_VERSION__: JSON.stringify(version) },
   },
   {
     entry: { 'cli/index': 'src/cli/index.ts' },
@@ -22,6 +23,6 @@ export default defineConfig([
     clean: false,
     sourcemap: false,
     banner: { js: '#!/usr/bin/env node' },
-    define: { __CLI_VERSION__: JSON.stringify(version) },
+    define: { __CLI_VERSION__: JSON.stringify(version), __SDK_VERSION__: JSON.stringify(version) },
   },
 ]);

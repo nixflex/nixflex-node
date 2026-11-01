@@ -12,7 +12,7 @@ test('real CLI call history/read/recording/billing make only escaped GETs to loo
  try{
   await run(['history','--number','+12025550100','--outcome','failed','--period','month','--limit','2']);
   const u=new URL(seen[0].url,'http://localhost');a.equal(u.pathname,'/v1/calls/history');a.equal(u.searchParams.get('number'),'+12025550100');a.equal(u.searchParams.get('outcome'),'failed');
-  for(const c of ['read','recording','billing'])await run([c,'failed:id/a']);
-  a.match(seen[1].url,/failed%3Aid%2Fa\?view=detail$/);a.match(seen[2].url,/\/recording$/);a.match(seen[3].url,/\/billing$/);a.ok(seen.every(x=>x.method==='GET'));
+  for(const c of ['read','recording'])await run([c,'failed:id/a']);
+  a.match(seen[1].url,/failed%3Aid%2Fa\?view=detail$/);a.match(seen[2].url,/\/recording$/);a.equal(seen.length,3);await a.rejects(run(['billing','failed:id/a']));a.equal(seen.length,3);a.ok(seen.every(x=>x.method==='GET'));
  }finally{await new Promise(r=>server.close(r));}
 });
