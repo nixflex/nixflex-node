@@ -19,6 +19,8 @@ import { PhoneNumbers, Sms, Keys, UsageResource, Webhooks } from './resources/st
 import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { createKey } from './key-create.js';
+import { Integrations } from './resources/integrations.js';
+export * from './types/integrations.js';
 import { Organisation } from './resources/organisation.js';
 import { Account, Voices } from './resources/core.js';
 export * from './types/core.js';
@@ -38,6 +40,7 @@ export class Nixflex {
   readonly account: Account;
   readonly voices: Voices;
   readonly organisation: Organisation;
+  readonly integrations: Integrations;
   /** AI agents - create, list, get, update, delete. */
   readonly agents: Agents;
   /** Calls - trigger outbound, list history, fetch transcripts + analysis. */
@@ -65,6 +68,7 @@ export class Nixflex {
     this.account = new Account(http);
     this.voices = new Voices(http);
     this.organisation = new Organisation(http);
+    this.integrations = new Integrations(http);
     this.agents = new Agents(http);
     this.calls = new Calls(http);
     this.campaigns = new Campaigns(http);

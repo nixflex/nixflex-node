@@ -1,0 +1,8 @@
+{
+  "api_key": "fixture_calendar_credential",
+  "username": "team",
+  "event_slug": "consultation",
+  "default_timezone": "Europe/London",
+  "is_active": false,
+  "agent_id": "agent/example"
+}

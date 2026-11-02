@@ -38,6 +38,11 @@ export interface Usage {
 }
 
 export interface WebhookConfigResponse {
+  webhook_url?: string | null;
+  webhook_url_2?: string | null;
+  is_set?: boolean;
+  deleted?: boolean;
+  provider?: string;
   ok?: boolean;
   phone_number?: string;
   url?: string | null;

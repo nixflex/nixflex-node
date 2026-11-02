@@ -60,7 +60,7 @@ test('cli: package bin points at the built file', () => {
 test('cli: every SDK method is reachable from the CLI', () => {
   const resDir = path.join(__dirname, '..', 'src', 'resources');
   const src = fs.readdirSync(resDir).filter((f) => f.endsWith('.ts')).map((f) => fs.readFileSync(path.join(resDir, f), 'utf8')).join('\n');
-  const groupOf = { Agents: 'agents', Calls: 'calls', Campaigns: 'campaigns', PhoneNumbers: 'numbers', Callers: 'callers', Sms: 'sms', SmsCampaigns: 'sms campaigns', Keys: 'keys', UsageResource: 'usage', Webhooks: 'webhooks', Organisation: 'organisation', Account: 'account', Voices: 'voices', Contacts: 'contacts', WebAgent: 'web-agent', Inbox: 'inbox' };
+  const groupOf = { Agents: 'agents', Calls: 'calls', Campaigns: 'campaigns', PhoneNumbers: 'numbers', Callers: 'callers', Sms: 'sms', SmsCampaigns: 'sms campaigns', Keys: 'keys', UsageResource: 'usage', Webhooks: 'webhooks', Organisation: 'organisation', Account: 'account', Voices: 'voices', Contacts: 'contacts', WebAgent: 'web-agent', Inbox: 'inbox', Integrations: 'integrations' };
   const rename = { deleteAll: 'delete-all', setWebCalls: 'web-calls', getWebCalls: 'web-calls' };
   const skip = new Set(['Webhooks.verify']); // local crypto helper, not an API call
   const help = run(['--help']).stdout;

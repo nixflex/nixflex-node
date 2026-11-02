@@ -21,7 +21,7 @@ test('all nine organisation SDK methods have visible CLI help commands',()=>{
  const fs=require('node:fs'),{execFileSync}=require('node:child_process');
  const source=fs.readFileSync(__dirname+'/../src/resources/organisation.ts','utf8');
  const methods=[...source.matchAll(/^  ([a-zA-Z]+)\(/gm)].map(m=>m[1]).filter(n=>n!=='constructor');
- const mapping={get:'get',members:'members',invite:'invite',resend:'resend',revoke:'revoke',removeMember:'remove',setRole:'role',activity:'activity',claimInvite:'claim'};
+ const mapping={get:'get',members:'members',invite:'invite',resend:'resend',revoke:'revoke',removeMember:'remove',setRole:'role',activity:'activity',claimInvite:'claim',rename:'rename',activityCsv:'activityCsv'};
  a.deepEqual(methods.sort(),Object.keys(mapping).sort());
  const help=execFileSync(process.execPath,[__dirname+'/../dist/cli/index.js','--help'],{encoding:'utf8'});
  for(const method of methods)a.match(help,new RegExp('organisation '+mapping[method]+'(?:\\s|$)'),method);

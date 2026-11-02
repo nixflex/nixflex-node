@@ -1,3 +1,23 @@
+## Unreleased K4 — 2 November 2026
+
+- MCP now has 70 tools: 59 prior descriptors/permissions unchanged plus 11
+  approved additions. Only get_webhook and the unconfirmed delete_webhook preview
+  mask URL output; their errors, retries, confirmation and confirmed deletion stay
+  unchanged. New credential-setting/disconnect tools and signing secrets stay out.
+- Organisation activity accepts UTC dates; event IDs/cursors are strings and
+  types now describe actor/sentence/displayed result. Added streamed CSV export
+  and organisation rename. CSV never retries after emitting data.
+- Added all public integration settings to Node/CLI and Python sync/async.
+  PUT replaces config; function PATCH changes supplied fields only.
+- CLI private integration output omits URLs, credentials, headers and free-form
+  schemas, including existing webhook reads/previews. SDK responses retain exact
+  wire data; callers must not log private configuration.
+- New CLI writes require confirmation before any request. Existing mutation
+  retry/outcome safety stays unchanged. No signing-secret method; personal
+  session-only flows stay dashboard only.
+- Candidate versions unchanged; nothing published. Successful real writes
+  require separate manual testing; offline tests are not staging evidence.
+
 ## Unreleased K3 — 2 November 2026
 
 - Added voice/SMS campaign controls, contact-hour preview and suppression lists,

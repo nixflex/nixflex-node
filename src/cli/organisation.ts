@@ -1,5 +1,8 @@
 import type Nixflex from '../index.js';
+import { activityFilters } from './activity-export.js';
 export const organisationHelp='\nORGANISATION (candidate; not enabled)\n'+[
+ 'organisation rename --set name=Business --confirm',
+ 'organisation activityCsv --output activity.csv [--set from=2026-10-01 --set to=2026-10-31]',
  'organisation get','organisation members','organisation activity [--set before=123 --set actor=UUID]',
  'organisation invite --set email=person@example.com --set role=member',
  'organisation claim --set email=owner@example.com','organisation resend INVITE_ID',
@@ -13,9 +16,10 @@ export async function organisationCommand(client:Nixflex,command:string,id:strin
  command=({removeMember:'remove',setRole:'role',claimInvite:'claim'} as Record<string,string>)[command]||command;
  if(command==='get')return org.get();
  if(command==='members')return org.members();
- if(command==='activity')return org.activity({before:typeof body.before==='string'?body.before:undefined,actor:typeof body.actor==='string'?body.actor:undefined});
- if(!['invite','claim','resend','revoke','remove','role'].includes(command))throw Error('organisation: get | members | activity | invite | claim | resend | revoke | remove | role');
+ if(command==='activity')return org.activity(activityFilters(body));
+ if(!['invite','claim','resend','revoke','remove','role','rename'].includes(command))throw Error('organisation: get | members | activity | invite | claim | resend | revoke | remove | role');
  if(!confirmed)return {would_change:'organisation '+command,target:id||body.email||null,hint:'Review the person or invitation, then add --confirm. Removal never rolls the shared API key.'};
+ if(command==='rename'){if(typeof body.name!=='string')throw Error('Supply --set name=Business');return org.rename(body.name);}
  if(['invite','claim'].includes(command)){
   if(typeof body.email!=='string'||!body.email.includes('@'))throw Error('Pass --set email=person@example.com');
   if(command==='claim')return org.claimInvite(body.email);

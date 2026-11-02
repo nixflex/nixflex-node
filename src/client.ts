@@ -29,6 +29,7 @@ export interface NixflexClientOptions {
 }
 
 import { encodeRequest, type BodyOptions } from './request-body.js';
+import { readStream } from './response-stream.js';
 declare const __SDK_VERSION__: string;
 export const SDK_VERSION = __SDK_VERSION__;
 
@@ -47,6 +48,15 @@ export class HttpClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
   private readonly maxRetries: number;
+
+  /** Streaming GET for activity CSV. No retry after the first returned byte. */
+  stream(path: string, query: Record<string, string | undefined>, opts?: RequestOptions): AsyncGenerator<Uint8Array> {
+    if (!path.startsWith('/') || path.startsWith('//') || /[?#\\]/.test(path)) throw new TypeError('Use a relative API path.');
+    const url = new URL(this.baseUrl + '/v1' + path);
+    for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, value);
+    return readStream(url, { Authorization: `Bearer ${this.apiKey}`, Accept: 'text/csv', 'User-Agent': `nixflex-node/${SDK_VERSION}` },
+      opts?.timeoutMs ?? this.timeoutMs, this.maxRetries, opts);
+  }
 
   constructor(opts: NixflexClientOptions) {
     if (!opts || typeof opts.apiKey !== 'string' || !opts.apiKey.includes(':')) {

@@ -1,0 +1,9 @@
+{
+  "pit": "fixture_private_token",
+  "location_id": "location_fixture",
+  "tags": [
+    "one",
+    "two"
+  ],
+  "is_active": false
+}

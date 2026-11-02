@@ -35,6 +35,9 @@ import { numberMove } from './number-move.js';
 import { agentListFlags, agentListParams } from './agent-list.js';
 import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
+import { integrationsCommand, integrationsHelp } from './integrations.js';
+import { privateIntegration } from './integration-output.js';
+import { activityExport } from './activity-export.js';
 import { organisationCommand, organisationHelp } from './organisation.js';
 import { coreGroups, coreFlags, coreHelp, coreRead, createAccount } from './core.js';
 import { c5Groups, c5Flags, c5Help, isC5, c5Command } from './c5.js';
@@ -188,7 +191,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
 }
 
 // ---------- help ----------
-const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', ...coreGroups, ...c5Groups];
+const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', 'integrations', ...coreGroups, ...c5Groups];
 const HELP = `nixflex ${VERSION} - the Nixflex voice AI platform from your terminal
 
 USAGE  nixflex <group> <command> [args] [--json] [--key KEY] [--base-url URL]
@@ -304,6 +307,7 @@ async function main(): Promise<void> {
       ...kitFlags,
       ...coreFlags,
       ...c5Flags,
+      output: { type: 'string' },
       ...agentListFlags,
       ...callReadFlags,
       'mcp-local': { type: 'string' },
@@ -324,7 +328,7 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
@@ -349,6 +353,8 @@ async function main(): Promise<void> {
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
   if (isC5(group, cmd, a1)) { out(await c5Command(client, positionals, values, bodyFrom(values), confirmed)); return; }
   if (coreGroups.includes(group) || (group === 'keys' && cmd === 'activity')) { out(await coreRead(client, group, cmd, a1, values)); return; }
+  if (group === 'integrations') { out(await integrationsCommand(client, positionals, bodyFrom(values), confirmed)); return; }
+  if (group === 'organisation' && cmd === 'activityCsv') { out(await activityExport(client, s('output'), bodyFrom(values))); return; }
   if (group === 'organisation') { out(await organisationCommand(client,cmd,a1,bodyFrom(values),confirmed)); return; }
   const limit = s('limit') ? parseInt(s('limit') as string, 10) : undefined;
   const slot = (s('slot') === '2' ? 2 : 1) as 1 | 2;
@@ -539,12 +545,12 @@ async function main(): Promise<void> {
 
   // --- webhooks (per number) ---
   if (group === 'webhooks') {
-    if (cmd === 'set') { if (!a1 || !a2) fail('webhooks set <number> <url> [--slot 1|2]'); out(await client.webhooks.set(a1, a2, slot)); return; }
-    if (cmd === 'get') { if (!a1) fail('webhooks get <number> [--slot 1|2]'); out(await client.webhooks.get(a1, slot)); return; }
+    if (cmd === 'set') { if (!a1 || !a2) fail('webhooks set <number> <url> [--slot 1|2]'); out(await privateIntegration(() => client.webhooks.set(a1, a2, slot))); return; }
+    if (cmd === 'get') { if (!a1) fail('webhooks get <number> [--slot 1|2]'); out(await privateIntegration(() => client.webhooks.get(a1, slot))); return; }
     if (cmd === 'delete') {
       if (!a1) fail('webhooks delete <number> [--slot 1|2] --confirm');
-      if (!(await preview('webhook slot ' + slot + ' on ' + a1, () => client.webhooks.get(a1, slot)))) return;
-      out(await client.webhooks.delete(a1, slot)); return;
+      if (!(await preview('webhook slot ' + slot + ' on ' + a1, () => privateIntegration(() => client.webhooks.get(a1, slot))))) return;
+      out(await privateIntegration(() => client.webhooks.delete(a1, slot))); return;
     }
     fail('webhooks: set | get | delete');
   }

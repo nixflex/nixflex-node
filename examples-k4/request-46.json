@@ -1,0 +1,15 @@
+{
+  "name": "lookup_fixture",
+  "url": "https://example.invalid/tool",
+  "method": "POST",
+  "headers": {
+    "X-Fixture": "private_fixture_value"
+  },
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  },
+  "speak_during": null,
+  "timeout_ms": 0,
+  "is_active": false
+}

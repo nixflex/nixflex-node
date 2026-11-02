@@ -1,0 +1,15 @@
+{
+  "post_call_url": "https://example.invalid/after",
+  "in_call_url": "https://example.invalid/action",
+  "tool_name": "lookup",
+  "tool_description": "Fixture",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      }
+    }
+  },
+  "is_active": false
+}
