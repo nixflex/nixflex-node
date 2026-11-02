@@ -1,3 +1,9 @@
+## Unreleased K5b — 2 November 2026
+
+- Document and verify caller_not_found versus phone_number_not_found; error mapping and retry behavior are unchanged.
+- Node keyterms return typing includes all six B49g response fields; no runtime request change.
+- Safe staging checker uses an owned non-protected number and exact caller absence code.
+
 ## K5 approved follow-up — 2 November 2026
 
 - Versions approved; SDK/CLI Knowledge coverage unchanged. Legacy draft GET can normalize and save: manual use only, excluded from the safe checker and MCP.

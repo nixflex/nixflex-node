@@ -1,4 +1,5 @@
 import type { HttpClient, RequestOptions } from '../client.js';
+import type { KnowledgeKeyterms } from '../types/knowledge.js';
 import type { KnowledgeObject, KnowledgePage, KnowledgeJob, KnowledgeTopicResult, JobPollOptions, KnowledgeUploadOptions, KnowledgeWriteOptions, PageQuery, TargetQuery, RevisionInput, ScopeInput, SessionInput, DraftEdit, DraftAcceptance, EmptyInput, SettingsInput, SourceInput, SourceReplacement, SourceDeletion, TopicInput, WebsiteInput } from '../types/knowledge.js';
 import { identifier as enc, writeOptions } from '../knowledge/guards.js';
 import { pollJob } from '../knowledge/poll.js';
@@ -162,7 +163,7 @@ export class Knowledge {
     return this.http.request('GET', `/knowledge/usage`, undefined, { ...query }, opts);
   }
   /** GET /agents/:target/knowledge-keyterms. Read result is private customer data. */
-  keyterms(target: string, opts?: RequestOptions): Promise<{ knowledge_keyterms: string[] }> {
+  keyterms(target: string, opts?: RequestOptions): Promise<KnowledgeKeyterms> {
     return this.http.request('GET', `/agents/${enc(target)}/knowledge-keyterms`, undefined, undefined, opts);
   }
   uploadSource(kb: string, file: string, opts: KnowledgeUploadOptions): Promise<KnowledgeJob> {

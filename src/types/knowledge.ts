@@ -1,6 +1,16 @@
 import type { RequestOptions } from '../client.js';
 /** Keep server receipts intact; unknown additive fields are preserved. */
 export interface KnowledgeObject { [key: string]: unknown }
+/** B49g owned read. Counts describe returned arrays; limits are server-configured. */
+export interface KnowledgeKeyterms {
+  knowledge_keyterms: string[];
+  knowledge_keyterms_count: number;
+  knowledge_keyterms_limit: number;
+  manual_keyterms: string[];
+  manual_keyterms_count: number;
+  /** New-edit limit; unchanged legacy manual lists may exceed it. */
+  manual_keyterms_limit: number;
+}
 export type KnowledgeChannel = 'inbound' | 'outbound' | 'web_voice' | 'web_chat' | 'sms';
 export interface KnowledgeSettings { channels?: KnowledgeChannel[]; match?: 'Strict' | 'Normal'; not_found?: string }
 export interface PageQuery { limit?: number; cursor?: string }

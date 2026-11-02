@@ -92,7 +92,7 @@ See KNOWLEDGE.md and TEAM-INTEGRATIONS.md for defaults, limits, errors and repla
 | client.knowledge | cancelSession(id: string, body: EmptyInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject> |
 | client.knowledge | ask(id: string, body: { text: string }, opts: KnowledgeWriteOptions): Promise<KnowledgeObject> |
 | client.knowledge | usage(query: { kb?: string } = {}, opts?: RequestOptions): Promise<KnowledgeObject> |
-| client.knowledge | keyterms(target: string, opts?: RequestOptions): Promise<{ knowledge_keyterms: string[] }> |
+| client.knowledge | keyterms(target: string, opts?: RequestOptions): Promise<KnowledgeKeyterms> |
 | client.knowledge | uploadSource(kb: string, file: string, opts: KnowledgeUploadOptions): Promise<KnowledgeJob> |
 | client.knowledge | replaceSourceFile(kb: string, id: string, file: string, opts: KnowledgeUploadOptions): Promise<KnowledgeJob> |
 | client.knowledge | measureFile(target: string, file: string, opts: RequestOptions = {}): Promise<KnowledgeObject> |

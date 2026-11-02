@@ -38,3 +38,9 @@ Webhook verification uses the organisation signing secret, independent of key ro
 See [METHODS.md](METHODS.md), [KNOWLEDGE.md](KNOWLEDGE.md), [TEAM-INTEGRATIONS.md](TEAM-INTEGRATIONS.md), [ORGANISATIONS.md](ORGANISATIONS.md) and [CHANGELOG.md](CHANGELOG.md). Full API reference: https://docs.nixflex.com.
 
 Unpublished candidates. Offline coverage does not prove successful mutations on staging; those tests remain manual.
+
+## Caller read: missing record versus wrong number
+
+GET /v1/phone-numbers/:phoneNumber/callers/:callerNumber returns HTTP 404 with code caller_not_found when the owned number has no saved record for that caller. HTTP 404 phone_number_not_found means the business number is missing or is not owned by this account; do not treat it as an empty caller record. Generic not_found is not the documented caller-absence response.
+
+Node and Python raise NixflexNotFoundError with status=404 and the exact server code. CLI --json exits 1 and preserves error.status and error.code (it does not serialize a JavaScript exception class). Inspect the code; never swallow all 404s. The K5b staging checker passes its synthetic-caller absence check only for 404 caller_not_found and selects that probe's business number from the authenticated account list, excluding the two protected staging numbers. With no eligible number it reports PENDING and sends no caller request. Never log the key, headers or raw response body.
