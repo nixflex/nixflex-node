@@ -116,3 +116,7 @@ First public release.
   requests after a `5xx` (a call is never dialled twice).
 - Dual ESM and CommonJS builds, TypeScript declarations, zero runtime
   dependencies, Node 18 or newer.
+
+## K2 core API additions — 1 November 2026
+
+K2 core additions (same unpublished 0.10.0 candidate): account.retention(), keys.activity(), voices.list()/get(); CLI account retention / keys activity / voices list|get / keys create. keys create requires --confirm and sends no existing credential. Calls list now forwards --offset; callers import --body preserves JSON null clears and numeric references. All writes remain single-attempt. No billing, monitoring or account-closure wrappers were added.

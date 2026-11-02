@@ -1,0 +1,13 @@
+import Nixflex, { type Voice, type VoiceListParams, type AccountRetention, type KeyActivity, type Usage } from '../dist/index.js';
+const client = new Nixflex({ apiKey: 'fixture:fixture' });
+const query: VoiceListParams = { language: 'en', gender: 'unknown', locale: 'en-GB', agent_id: 'a', agent_language: 'multi', availability: 'all', limit: 1, cursor: 'opaque' };
+const retention: Promise<AccountRetention> = client.account.retention();
+const activity: Promise<KeyActivity> = client.keys.activity({ period: '7d' });
+const voice: Promise<Voice> = client.voices.get('v', { agent_language: 'multi' });
+client.voices.list(query);
+Nixflex.createKey({ name: null, email: null });
+client.callers.import('+12025550100', [{ caller_number: '+12025550101', reference_id: 42, name: null }]);
+client.sms.send({ agent_id: 'a', from_number: '+12025550100', to: '+12025550101', message: 'Hi', context: { reply_context: null, external_id: 42 } });
+client.phoneNumbers.import({ phone_number: '+12025550100', agent_id: 'a', custom_prompt: null });
+const usage: Usage = { plan: null, total_calls: null, total_minutes: null, total_cost: null, rate_limit_per_minute: null, max_concurrent: 1, peak_concurrent_this_month: 0, rejected_at_cap_this_month: 0 };
+void [retention, activity, voice, usage];

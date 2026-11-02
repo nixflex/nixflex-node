@@ -23,7 +23,7 @@ export interface PhoneNumberImportParams {
   /** Optional Telnyx signature public-key candidate; saving does not verify it. */
   telnyx_public_key?: string;
   /** Per-number prompt override, max 8000 chars. */
-  custom_prompt?: string;
+  custom_prompt?: string | null;
 }
 
 export interface PhoneNumber {

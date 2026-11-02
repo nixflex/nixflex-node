@@ -140,9 +140,15 @@ export class Sms {
 // Keys + usage
 // ============================================
 import type { KeyRotateResponse, Usage } from '../types/account.js';
+import type { KeyActivityParams, KeyActivity } from '../types/core.js';
 
 export class Keys {
   constructor(private readonly http: HttpClient) {}
+
+  /** Retained request-log snapshot, not organisation audit events. Default today (UTC). */
+  activity(params: KeyActivityParams = {}, opts?: RequestOptions): Promise<KeyActivity> {
+    return this.http.request('GET', '/keys/activity', undefined, { ...params }, opts);
+  }
 
   /** Rotate the key SECRET (key_id stays stable - the Stripe model). The old
    * secret stops working THE INSTANT this returns; the new one is shown ONCE.

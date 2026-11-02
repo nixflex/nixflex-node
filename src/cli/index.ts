@@ -36,6 +36,8 @@ import { agentListFlags, agentListParams } from './agent-list.js';
 import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
 import { organisationCommand, organisationHelp } from './organisation.js';
+import { coreGroups, coreFlags, coreHelp, coreRead, createAccount } from './core.js';
+import { coreCallList, coreCallerImport } from './core-fields.js';
 import { setupMcp } from './mcp/setup.mjs';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
 
@@ -185,7 +187,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
 }
 
 // ---------- help ----------
-const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation'];
+const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', ...coreGroups];
 const HELP = `nixflex ${VERSION} - the Nixflex voice AI platform from your terminal
 
 USAGE  nixflex <group> <command> [args] [--json] [--key KEY] [--base-url URL]
@@ -299,6 +301,7 @@ async function main(): Promise<void> {
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
       ...kitFlags,
+      ...coreFlags,
       ...agentListFlags,
       ...callReadFlags,
       'mcp-local': { type: 'string' },
@@ -319,7 +322,7 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP + organisationHelp); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
@@ -340,7 +343,9 @@ async function main(): Promise<void> {
   if (group === 'completion') { process.stdout.write(completion(cmd || '')); return; }
   if (group === 'mcp') { if (cmd !== 'setup') fail('usage: nixflex mcp setup <claude|cursor>'); await mcpSetup(a1, confirmed, s('mcp-local')); return; }
 
+  if (group === 'keys' && cmd === 'create') { out(await createAccount(bodyFrom(values, { name: s('name'), email: s('email') }), confirmed, s('base-url') || readConfig().base_url)); return; }
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
+  if (coreGroups.includes(group) || (group === 'keys' && cmd === 'activity')) { out(await coreRead(client, group, cmd, a1, values)); return; }
   if (group === 'organisation') { out(await organisationCommand(client,cmd,a1,bodyFrom(values),confirmed)); return; }
   const limit = s('limit') ? parseInt(s('limit') as string, 10) : undefined;
   const slot = (s('slot') === '2' ? 2 : 1) as 1 | 2;
@@ -409,7 +414,7 @@ async function main(): Promise<void> {
       }
       fail('still in progress after the timeout - `nixflex calls get ' + id + '` later');
     }
-    if (cmd === 'list') { const q: Record<string, unknown> = {}; if (limit) q.limit = limit; if (s('agent')) q.agent_id = s('agent'); out(s('agent') ? await client.calls.history({agent: s('agent'), limit}) : await client.calls.list(q as never)); return; }
+    if (cmd === 'list') { out(await coreCallList(client, values)); return; }
     if (cmd === 'get') { if (!a1) fail('calls get <call_id>'); out(await client.calls.get(a1)); return; }
     if (cmd === 'delete') {
       if (!a1) fail('calls delete <call_id> --confirm');
@@ -471,6 +476,7 @@ async function main(): Promise<void> {
 
   // --- callers (caller context) ---
   if (group === 'callers') {
+    if (cmd === 'import' && values.body !== undefined) { out(await coreCallerImport(client, a1, bodyFrom(values))); return; }
     if (cmd === 'get') { if (!a1 || !a2) fail('callers get <your_number> <caller_number>'); const r = await client.callers.get(a1, a2); out(JSON_MODE ? r : r.caller.context); return; }
     if (cmd === 'set') {
       if (!a1 || !a2) fail('callers set <your_number> <caller_number> --name ... --email ... [--set k=v]');

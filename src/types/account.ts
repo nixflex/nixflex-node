@@ -22,13 +22,13 @@ export interface KeyCreateResponse {
  * described a different shape and is being corrected). All-time totals
  * plus the account limits and this months concurrency peak. */
 export interface Usage {
-  plan: string;
-  total_calls: number;
+  plan: string | null;
+  total_calls: number | null;
   /** Fractional minutes, e.g. 551.54. */
-  total_minutes: number;
+  total_minutes: number | null;
   /** Nixflex charges only - carrier costs are billed to you by Twilio/Telnyx. */
-  total_cost: number;
-  rate_limit_per_minute: number;
+  total_cost: number | null;
+  rate_limit_per_minute: number | null;
   max_concurrent: number;
   peak_concurrent_this_month: number;
   rejected_at_cap_this_month: number;

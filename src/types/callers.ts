@@ -7,16 +7,16 @@
 /** The six fields a developer may set. Omitted = kept; null = removed. */
 export interface CallerContextSetParams {
   /** Full name - first and last. */
-  name?: string | null;
-  email?: string | null;
+  name?: string | number | null;
+  email?: string | number | null;
   /** A contact number other than the one they call from. */
-  phone?: string | null;
+  phone?: string | number | null;
   /** Free text - city, area or postal code. */
-  location?: string | null;
+  location?: string | number | null;
   /** An account, order or booking reference the caller uses. */
-  reference_id?: string | null;
+  reference_id?: string | number | null;
   /** A short preference, e.g. "prefers morning appointments". */
-  preference?: string | null;
+  preference?: string | number | null;
 }
 
 /** The record as returned. Only fields with a value are present. */

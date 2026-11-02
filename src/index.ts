@@ -20,10 +20,14 @@ import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { createKey } from './key-create.js';
 import { Organisation } from './resources/organisation.js';
+import { Account, Voices } from './resources/core.js';
+export * from './types/core.js';
 export * from './resources/organisation.js';
 export type { PhoneNumberMoveParams, PhoneNumberMoveResponse } from './resources/number-move.js';
 
 export class Nixflex {
+  readonly account: Account;
+  readonly voices: Voices;
   readonly organisation: Organisation;
   /** AI agents - create, list, get, update, delete. */
   readonly agents: Agents;
@@ -46,6 +50,8 @@ export class Nixflex {
 
   constructor(options: NixflexClientOptions) {
     const http = new HttpClient(options);
+    this.account = new Account(http);
+    this.voices = new Voices(http);
     this.organisation = new Organisation(http);
     this.agents = new Agents(http);
     this.calls = new Calls(http);
@@ -61,7 +67,7 @@ export class Nixflex {
   /** Create a brand-new API key (unauthenticated signup endpoint - most
    * developers use the dashboard instead). The key_secret is shown ONCE.
    * Rate-limited per IP to prevent abuse. */
-  static async createKey(params: { name?: string; email?: string } = {}, baseUrl = 'https://api.nixflex.com'): Promise<KeyCreateResponse> {
+  static async createKey(params: { name?: string | null; email?: string | null } = {}, baseUrl = 'https://api.nixflex.com'): Promise<KeyCreateResponse> {
     return createKey(params, baseUrl);
   }
 }

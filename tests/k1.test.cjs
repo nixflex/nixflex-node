@@ -39,7 +39,7 @@ test('K1 excluded operations have no public resource methods',()=>{
  const c=new Nixflex(options);
  for(const k of ['storage','llm','tts'])a.equal(c[k],undefined);
  for(const k of ['getMonitor','setMonitor'])a.equal(c.phoneNumbers[k],undefined);
- a.equal(c.calls.billing,undefined);a.equal(c.account,undefined);a.equal(c.knowledge,undefined);
+ a.equal(c.calls.billing,undefined);a.equal(typeof c.account.retention,'function');a.equal(c.account.delete,undefined);a.equal(c.account.close,undefined);a.equal(c.knowledge,undefined);
 });
 test('K1 built CLI sends canonical CSV and shows complete errors without leaking the key',async()=>{
  const seen=[],dir=fs.mkdtempSync(path.join(os.tmpdir(),'k1-cli-'));

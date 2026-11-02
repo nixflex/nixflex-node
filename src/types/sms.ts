@@ -8,11 +8,11 @@ export interface SmsSendParams extends ContactLocation {
   message: string;
   /** Required imported sender; no agent-number fallback. */
   from_number: string;
-  context?: { reply_context?: string };
+  context?: { reply_context?: string | null; [key: string]: unknown };
 }
 export interface SmsSendResponse {
   status: string; to: string; from: string;
-  message_id?: string; work_id?: string; persistence?: string; safe_to_retry?: false;
+  message_id?: string | null; work_id?: string | null; persistence?: string; safe_to_retry?: false;
 }
 export interface SmsCampaignRecipient extends RecipientLocation {
   phone: string;

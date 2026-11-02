@@ -3,7 +3,7 @@ import { SDK_VERSION } from './client.js';
 import type { KeyCreateResponse } from './types/account.js';
 
 /** Unauthenticated signup is also a mutation: one attempt, truthful lost-reply error. */
-export async function createKey(params: { name?: string; email?: string }, baseUrl: string): Promise<KeyCreateResponse> {
+export async function createKey(params: { name?: string | null; email?: string | null }, baseUrl: string): Promise<KeyCreateResponse> {
   let res: Response;
   try {
     res = await fetch(baseUrl.replace(/\/+$/, '') + '/v1/keys', {
