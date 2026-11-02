@@ -1,4 +1,13 @@
-## Unreleased K4 — 2 November 2026
+## Unreleased K5 — 2 November 2026
+
+- All 39 public Knowledge operations plus automatic keyterms read.
+- Explicit revisions/operation keys, bounded polling, streamed uploads and JSON exports; partial exports never replay.
+- New CLI POST/change commands require confirmation. Safe CLI errors preserve uncertainty.
+- Complete K1–K5 public method guides; no private signing-secret or account-erasure additions.
+- Node public declarations no longer export unused private provider-specific types; engine endpoints unchanged.
+- Proposed versions, not published; successful writes await manual staging.
+
+## Unreleased K4 â€” 2 November 2026
 
 - MCP now has 70 tools: 59 prior descriptors/permissions unchanged plus 11
   approved additions. Only get_webhook and the unconfirmed delete_webhook preview
@@ -18,7 +27,7 @@
 - Candidate versions unchanged; nothing published. Successful real writes
   require separate manual testing; offline tests are not staging evidence.
 
-## Unreleased K3 — 2 November 2026
+## Unreleased K3 â€” 2 November 2026
 
 - Added voice/SMS campaign controls, contact-hour preview and suppression lists,
   web widget settings, and agent inbox reads/settings with exact public paths.
@@ -35,7 +44,7 @@
 - Candidate versions unchanged; nothing published. Existing SDK/CLI methods and
   engine endpoints remain available. SMS reuse_campaign_id is not supported.
 
-# 0.10.0 — K1, 1 November 2026 (unpublished)
+# 0.10.0 â€” K1, 1 November 2026 (unpublished)
 
 Removed calls.billing, phoneNumbers.setMonitor/getMonitor, storage/llm/tts.set/get/delete; CLI calls billing, numbers monitor and storage/llm/tts commands.
 Reason: **non-public by Fahim decision**. Engine endpoints stay unchanged.
@@ -84,8 +93,7 @@ TypeScript: from_number is now required for SMS. Use message_template and schedu
 - Fix: User-Agent now reports the real SDK version (was stuck at 0.1.0).
 ## 0.5.0
 
-- New: `client.llm` - bring your own OpenAI-compatible model (set() verifies with a real completion + tool-calling probe, key write-only). Calls it serves bill at -0.015/min.
-- New: `client.tts` - bring your own voice (elevenlabs/cartesia, set() verifies with a real synthesis, key write-only). Phone calls only; -0.02/min.
+- Historical private model and voice integrations were removed from the public kits by the K1 scope decision. Manage them in the dashboard.
 - Docs: https://docs.nixflex.com/advanced/your-own-llm and /advanced/your-own-tts
 
 ## 0.4.0
@@ -154,6 +162,6 @@ First public release.
 - Dual ESM and CommonJS builds, TypeScript declarations, zero runtime
   dependencies, Node 18 or newer.
 
-## K2 core API additions — 1 November 2026
+## K2 core API additions â€” 1 November 2026
 
 K2 core additions (same unpublished 0.10.0 candidate): account.retention(), keys.activity(), voices.list()/get(); CLI account retention / keys activity / voices list|get / keys create. keys create requires --confirm and sends no existing credential. Calls list now forwards --offset; callers import --body preserves JSON null clears and numeric references. All writes remain single-attempt. No billing, monitoring or account-closure wrappers were added.

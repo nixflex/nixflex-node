@@ -36,6 +36,8 @@ import { agentListFlags, agentListParams } from './agent-list.js';
 import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
 import { integrationsCommand, integrationsHelp } from './integrations.js';
+import { knowledgeCommand, knowledgeFlags } from './knowledge.js';
+import { knowledgeHelp } from './knowledge-plan.js';
 import { privateIntegration } from './integration-output.js';
 import { activityExport } from './activity-export.js';
 import { organisationCommand, organisationHelp } from './organisation.js';
@@ -191,7 +193,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
 }
 
 // ---------- help ----------
-const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', 'integrations', ...coreGroups, ...c5Groups];
+const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', 'integrations', 'knowledge', ...coreGroups, ...c5Groups];
 const HELP = `nixflex ${VERSION} - the Nixflex voice AI platform from your terminal
 
 USAGE  nixflex <group> <command> [args] [--json] [--key KEY] [--base-url URL]
@@ -305,6 +307,7 @@ async function main(): Promise<void> {
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
       ...kitFlags,
+      ...knowledgeFlags,
       ...coreFlags,
       ...c5Flags,
       output: { type: 'string' },
@@ -328,7 +331,7 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp + knowledgeHelp); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
@@ -353,6 +356,7 @@ async function main(): Promise<void> {
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
   if (isC5(group, cmd, a1)) { out(await c5Command(client, positionals, values, bodyFrom(values), confirmed)); return; }
   if (coreGroups.includes(group) || (group === 'keys' && cmd === 'activity')) { out(await coreRead(client, group, cmd, a1, values)); return; }
+  if (group === 'knowledge') { out(await knowledgeCommand(client, positionals, values, bodyFrom(values), confirmed)); return; }
   if (group === 'integrations') { out(await integrationsCommand(client, positionals, bodyFrom(values), confirmed)); return; }
   if (group === 'organisation' && cmd === 'activityCsv') { out(await activityExport(client, s('output'), bodyFrom(values))); return; }
   if (group === 'organisation') { out(await organisationCommand(client,cmd,a1,bodyFrom(values),confirmed)); return; }

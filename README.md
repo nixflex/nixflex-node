@@ -1,177 +1,40 @@
-# Nixflex Node.js SDK
+# Nixflex Node SDK and CLI — 0.10.0 candidate
 
-## MCP setup foundation (local 0.10.0 candidate, not published)
+Node 18+ for SDK/CLI, Node 22+ for MCP setup. SDK uses native fetch; CLI parser is bundled with its notices.
 
-This K1 candidate corrects API requests and public scope (see CHANGELOG). MCP setup requires Node 22+ and uses
-secret-free, version-pinned OS-specific launchers. Supported tools are Claude
-Desktop, Claude Code, Codex and Cursor; VS Code setup is retired. Run 1 writes only
-Claude Desktop/Cursor configs; the other installers are run 3. The shared builders
-already cover all four formats. See `FOUNDATION.md` for the local packed test.
-
-`nixflex mcp setup <claude|cursor> --mcp-local <unpacked-package-directory>` can test
-the unpublished MCP locally. Normal npm-mode setup is intentionally blocked while
-the candidate is unpublished. No key is copied to the client configuration.
-Provide a key and its explicit approved API URL through the client's environment,
-or use an existing legacy credential file with its saved URL. Legacy login is
-plaintext storage, not an OS vault. Secure credential setup is deferred to run 3.
-Malformed/unreadable config is refused; unrelated entries/comments are preserved.
-Replacement shows a redacted preview and needs confirmation (`--confirm` for scripts).
-Close other config editors while setup runs; do not run concurrent installers.
-
-Official Node.js SDK for the [Nixflex](https://nixflex.com) voice AI platform — AI phone agents, outbound campaigns, SMS, and web calls.
-
-```bash
-npm install nixflex
-```
-
-## Quickstart
-
-```js
+~~~js
 import Nixflex from 'nixflex';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY});
+const agents = await client.agents.list({limit:1});
+// Do not print private responses or credentials.
+~~~
 
-const client = new Nixflex({ apiKey: 'nxf_xxx:nxfs_xxx' });
+Install the approved release using npm install nixflex; local tests use the tarball. CLI: nixflex --help. Set NIXFLEX_API_KEY privately; --base-url explicitly selects staging. --json returns machine-readable results. New K1–K5 CLI writes need --confirm; older commands retain their documented behaviour.
 
-// Create an agent (every field has a sensible default)
-const agent = await client.agents.create({
-  name: 'Acme Dental Receptionist',
-  system_prompt: 'You are the friendly front-desk assistant at Acme Dental...',
-});
+## MCP setup
 
-// Attach a number you own (carrier inferred from credentials)
-await client.phoneNumbers.import({
-  phone_number: '+447446466847',
-  twilio_sid: process.env.TWILIO_SID,
-  twilio_token: process.env.TWILIO_TOKEN,
-  agent_id: agent.agent_id,
-});
+Automatic config writers: Claude Desktop and Cursor. Claude Code/Codex use shared builders/manual configuration; VS Code setup is retired. Test unpublished MCP with nixflex mcp setup claude|cursor --mcp-local DIRECTORY.
 
-// Trigger an outbound AI call (fire-and-forget)
-const call = await client.calls.create({
-  agent_id: agent.agent_id,
-  to_number: '+447386172392',
-  prompt: 'Remind {patient_name} about their appointment on {time}.',
-  dynamic_vars: { patient_name: 'Sarah', time: 'Tuesday at 2pm' },
-});
-```
+Normal npm-mode setup stays blocked pending publication approval. No key goes into client config. Provide key and explicit API URL through the client's environment. Legacy credential files are plaintext, not an OS vault. OS-vault setup and human Windows/Mac validation remain separate work.
 
-## Resources
+Malformed/unreadable config is refused; unrelated entries/comments survive. Replacement needs confirmation. Avoid concurrent config editors/installers.
 
-| Resource | Methods |
-|---|---|
-| `client.agents` | `create` `list` `get` `update` `delete` `iter` |
-| `client.calls` | `create` (outbound) `list` `get` `history` `read` `recording` `delete` `deleteAll` `iter` |
-| `client.campaigns` | `create` `launch` — voice batch campaigns with scheduling windows |
-| `client.phoneNumbers` | `import` `list` `get` `usage` `move` `update` `delete` `setWebCalls` `getWebCalls` |
-| `client.sms` | `send` + `campaigns.create/launch/list/get/delete` |
-| `client.keys` | `rotate` (Stripe-style: key_id stays, secret rotates) |
-| `client.usage` | `get` — minutes, calls, SMS, balance |
-| `client.webhooks` | `set` `get` `delete` — per-number post-call webhooks (2 slots) |
-| `Nixflex.createKey()` | static — signup without auth |
+## Contract and safety
 
-## Errors — typed, catchable by class
+K1–K5 cover 140 of 141 public inventory operations in Node/CLI/Python. Private signing-secret retrieval is deliberately excluded. Dedicated Knowledge keyterms is additional to the old denominator. Personal login, invite acceptance, ownership transfer and account closure remain dashboard-only.
 
-```js
-import { NixflexRateLimitError, NixflexPaymentRequiredError } from 'nixflex';
+Only GET has bounded retries (default one). POST/PUT/PATCH/DELETE never automatically repeat, including 429, lost replies or malformed success. NixflexOutcomeUnknownError means outcome unknown and safe_to_retry false: inspect authoritative state before retrying. Never log raw errors, customer content, recordings, credentials or private integration responses.
 
-try {
-  await client.calls.create({ ... });
-} catch (e) {
-  if (e instanceof NixflexRateLimitError) {
-    console.log(`Rate limited — retry in ${e.retryAfterSeconds}s`);
-  } else if (e instanceof NixflexPaymentRequiredError) {
-    console.log('Top up your balance');
-  }
-  // Every error carries: status, code, type, message, docUrl, details, requestId
-}
-```
+Ownership, roles, active-state, busy work, unsettled charges, revisions and cleanup refusals remain authoritative. Accepted deletion is not proof cleanup finished. API keys act with Owner authority and cannot impersonate a personal member session.
 
-## Built in
+Omitted fields stay omitted. Agent defaults are dynamic greeting true, maximum duration 300 seconds, silence hangup 10 seconds; existing agents are not rewritten. Single-call variables use dynamic_vars; variables is a non-conflicting alias. Campaign recipient variables stay unchanged. SMS requires a sender; campaign message_template and scheduled_date are canonical.
 
-- **Read-only retries** — GET retries are bounded and honour `Retry-After`. POST/PUT/PATCH/DELETE never repeat automatically, including 429, network failures and 5xx. A lost or malformed change reply raises `NixflexOutcomeUnknownError` (`outcome: 'unknown'`, `safe_to_retry: false`): check the result before retrying. This local change is not published yet.
-- **Pagination iterators** — `for await (const call of client.calls.iter()) { ... }`
-- **TypeScript types for every request and response** — generated from the [API docs](https://docs.nixflex.com)
-- **Timeouts + AbortSignal support** per client or per request
-- **Zero runtime dependencies** — native fetch, Node 18+
+Preserve page filters/string cursors; stop at next_cursor:null. Call iterators use pages 1–200; offset paging is not a snapshot. Integration PUT replaces configuration; custom-function PATCH changes supplied fields.
 
-## Verifying webhooks
+Webhook verification uses the organisation signing secret, independent of key rotation. Obtain it privately outside kits; verify the raw body before trusting a delivery.
 
-Nixflex signs every webhook delivery with an `X-Nixflex-Signature` header. Verify it before trusting a payload — pass the **raw** request body, not a re-serialized object:
+## Method reference
 
-```js
-import express from 'express';
-import { verifyWebhookSignature } from 'nixflex';
+See [METHODS.md](METHODS.md), [KNOWLEDGE.md](KNOWLEDGE.md), [TEAM-INTEGRATIONS.md](TEAM-INTEGRATIONS.md), [ORGANISATIONS.md](ORGANISATIONS.md) and [CHANGELOG.md](CHANGELOG.md). Full API reference: https://docs.nixflex.com.
 
-const app = express();
-
-app.post('/nixflex/calls', express.raw({ type: 'application/json' }), (req, res) => {
-  const ok = verifyWebhookSignature(
-    req.body,                                  // raw Buffer
-    req.get('x-nixflex-signature'),
-    process.env.NIXFLEX_WEBHOOK_SIGNING_SECRET // organisation signing secret; independent of API-key rotation
-  );
-  if (!ok) return res.sendStatus(400);
-
-  const event = JSON.parse(req.body.toString('utf8'));
-  // handle event.event === 'call.completed'
-  res.sendStatus(200);
-});
-```
-
-Returns `false` for a tampered body, wrong secret, malformed header, or a signature older than the tolerance window (300 seconds; override with `{ toleranceSeconds }`). It never throws.
-
-## Deleting call data
-
-```js
-await client.calls.delete(callId);   // one call: record, transcript, recording
-await client.calls.deleteAll();      // guarded call-data deletion; not SMS/account erasure
-```
-
-Both can refuse busy/unsettled work or report pending cleanup. Read the result; never claim deletion from an accepted request alone.
-
-## Docs
-
-### Local unpublished Group 2: number reads
-
-`client.phoneNumbers.get(number)` reads all safe saved settings, `source`,
-`web_calls_effective` and `telnyx_key_status`. No credentials/internal IDs.
-`phoneNumbers.list({agent_id, provider, limit, cursor})` opts into paging with
-limit/cursor; count remains returned rows. Follow next_cursor until null, keeping
-account/filters unchanged. Legacy list and dedicated web-calls methods stay. Dedicated monitoring methods are not public.
-
-All seven PATCH switches are typed booleans: `inbound_enabled`, `outbound_enabled`,
-`sms_reply_enabled`, `web_agent_enabled`, `web_calls_enabled`,
-`web_functions_enabled`, `monitor_enabled`. Website voice needs Web agent ON;
-the saved voice switch is not erased when Web agent is OFF. Effective eligibility
-does not bypass active-account/agent/billing checks. Website custom functions
-are public to visitors when enabled (default OFF). Monitoring eligibility alone
-does not attach a listener or incur its premium. `source` is descriptive/read-only.
-
-CLI: `numbers get +12025550100 --json`; `numbers list --limit 1 --provider telnyx --json`.
-Use `numbers update <number> --set web_agent_enabled=true` (and the other boolean
-names above); omitted fields remain unchanged. Existing commands still work.
-These are local additions, not a new npm publication.
-
-## Local Area 3 batch 1 candidate (not published)
-
-Single-call CLI `--var name=Sam` fills `{{name}}` via `dynamic_vars`. Node uses
-`dynamic_vars` directly. CLI JSON can use `variables` as a compatibility alias;
-do not combine aliases or combine them with `--var`. Ambiguity fails before HTTP.
-Campaign recipient `variables` is unchanged. Prompts can be retained in call data.
-
-`calls.iter(200)` pages beyond 200 records, including a full final page. Sizes
-outside whole numbers 1–200 fail before any request. Offset paging is not a snapshot.
-The existing GET-only bounded retry rule remains: changes never automatically
-repeat; an uncertain outcome means check before retrying. Guarded call deletion
-can refuse cleanup and is not a promise of instant account/SMS/all-copy erasure.
-
-Full API reference: **https://docs.nixflex.com**
-
-Release history: [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE).
-
-## K1 contract and migration
-
-See [CHANGELOG.md](CHANGELOG.md) for corrected fields, removals, errors, retry rules and defaults.
-
-## K2 core API additions — 1 November 2026
-
-K2 core additions (same unpublished 0.10.0 candidate): account.retention(), keys.activity(), voices.list()/get(); CLI account retention / keys activity / voices list|get / keys create. keys create requires --confirm and sends no existing credential. Calls list now forwards --offset; callers import --body preserves JSON null clears and numeric references. All writes remain single-attempt. No billing, monitoring or account-closure wrappers were added.
+Unpublished candidates. Offline coverage does not prove successful mutations on staging; those tests remain manual.

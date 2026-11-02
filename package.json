@@ -43,7 +43,10 @@
     "LICENSE",
     "CHANGELOG.md",
     "THIRD-PARTY-NOTICES.md",
-    "ORGANISATIONS.md"
+    "ORGANISATIONS.md",
+    "KNOWLEDGE.md",
+    "METHODS.md",
+    "TEAM-INTEGRATIONS.md"
   ],
   "engines": {
     "node": ">=18"

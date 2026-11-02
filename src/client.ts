@@ -30,6 +30,9 @@ export interface NixflexClientOptions {
 
 import { encodeRequest, type BodyOptions } from './request-body.js';
 import { readStream } from './response-stream.js';
+import { transferContext } from './knowledge/transfer-context.js';
+import { uploadFile } from './knowledge/upload.js';
+import { download } from './knowledge/download.js';
 declare const __SDK_VERSION__: string;
 export const SDK_VERSION = __SDK_VERSION__;
 
@@ -44,6 +47,12 @@ const DEFAULT_BASE_URL = 'https://api.nixflex.com';
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 export class HttpClient {
+  knowledgeUpload<T>(path: string, file: string, opts?: RequestOptions): Promise<T> {
+    return uploadFile<T>(transferContext(this.baseUrl, this.apiKey, SDK_VERSION, path, this.timeoutMs, this.maxRetries, opts), file, opts);
+  }
+  knowledgeDownload(path: string, query: Record<string, string | undefined> = {}, opts?: RequestOptions): AsyncGenerator<Uint8Array> {
+    return download(transferContext(this.baseUrl, this.apiKey, SDK_VERSION, path, this.timeoutMs, this.maxRetries, opts, query), opts);
+  }
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly timeoutMs: number;

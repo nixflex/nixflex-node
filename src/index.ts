@@ -20,6 +20,8 @@ import { Callers } from './resources/callers.js';
 import type { KeyCreateResponse } from './types/account.js';
 import { createKey } from './key-create.js';
 import { Integrations } from './resources/integrations.js';
+import { Knowledge } from './resources/knowledge.js';
+export * from './types/knowledge.js';
 export * from './types/integrations.js';
 import { Organisation } from './resources/organisation.js';
 import { Account, Voices } from './resources/core.js';
@@ -41,6 +43,7 @@ export class Nixflex {
   readonly voices: Voices;
   readonly organisation: Organisation;
   readonly integrations: Integrations;
+  readonly knowledge: Knowledge;
   /** AI agents - create, list, get, update, delete. */
   readonly agents: Agents;
   /** Calls - trigger outbound, list history, fetch transcripts + analysis. */
@@ -69,6 +72,7 @@ export class Nixflex {
     this.voices = new Voices(http);
     this.organisation = new Organisation(http);
     this.integrations = new Integrations(http);
+    this.knowledge = new Knowledge(http);
     this.agents = new Agents(http);
     this.calls = new Calls(http);
     this.campaigns = new Campaigns(http);
@@ -100,6 +104,6 @@ export * from './types/call-reads.js';
 export * from './types/phone-numbers.js';
 export * from './types/number-usage.js';
 export * from './types/sms.js';
-export * from './types/account.js';
+export type { KeyCreateResponse, KeyRotateResponse, Usage, WebhookConfigResponse } from './types/account.js';
 export * from './types/callers.js';
 export { verifyWebhookSignature, type VerifyOptions } from './webhook-verify.js';
