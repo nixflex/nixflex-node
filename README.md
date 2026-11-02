@@ -15,7 +15,7 @@ Install the approved release using npm install nixflex; local tests use the tarb
 
 Automatic config writers: Claude Desktop and Cursor. Claude Code/Codex use shared builders/manual configuration; VS Code setup is retired. Test unpublished MCP with nixflex mcp setup claude|cursor --mcp-local DIRECTORY.
 
-Normal npm-mode setup stays blocked pending publication approval. No key goes into client config. Provide key and explicit API URL through the client's environment. Legacy credential files are plaintext, not an OS vault. OS-vault setup and human Windows/Mac validation remain separate work.
+Normal npm-mode setup writes a launcher pinned to nixflex-mcp@0.4.0. Publish MCP and verify the registry version BEFORE publishing Node; this candidate does not publish or download anything during setup. No key goes into client config. Provide key and explicit API URL through the client's environment. Legacy credential files are plaintext, not an OS vault. OS-vault setup and human Windows/Mac validation remain separate work.
 
 Malformed/unreadable config is refused; unrelated entries/comments survive. Replacement needs confirmation. Avoid concurrent config editors/installers.
 

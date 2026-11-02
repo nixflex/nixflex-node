@@ -25,10 +25,29 @@ test('built CLI setup uses local package safely and never serializes the environ
 });
 test('built CLI refuses unpublished npm target, VS Code and missing base without changing config',()=>{
  for(const args of [['mcp','setup','cursor'],['mcp','setup','vscode']]){
-  const f=fixture(),result=f.run(args);a.notEqual(result.status,0);a.ok(!fs.existsSync(path.join(f.root,'.cursor','mcp.json')));
+  const f=fixture(),source=fs.readFileSync(binary,'utf8');
+  const approved='mcpVersion: "0.4.0", minimumNodeMajor: 22, published: true';
+  a.equal(source.split(approved).length,2,'exactly one compiled release gate');
+  const unpublished=path.join(f.root,'unpublished.mjs');
+  fs.writeFileSync(unpublished,source.replace(approved,approved.replace('true','false')));
+  const result=spawnSync(process.execPath,[unpublished,...args],{env:f.env,encoding:'utf8'});
+  a.notEqual(result.status,0);a.ok(!fs.existsSync(path.join(f.root,'.cursor','mcp.json')));
+  if(args[2]==='cursor')a.match(result.stderr,/not published yet/);
   a.ok(!(result.stdout+result.stderr).includes(key));
  }
  const f=fixture();delete f.env.NIXFLEX_BASE_URL;
  a.notEqual(f.run(['mcp','setup','cursor','--mcp-local',f.pkg]).status,0);
  a.ok(!fs.existsSync(path.join(f.root,'.cursor','mcp.json')));
+});
+test('K5 published CLI writes a pinned MCP launcher without launching or serializing the key',()=>{
+ const f=fixture(),result=f.run(['mcp','setup','cursor','--json']);
+ a.equal(require('../src/cli/mcp/release.json').published,true);
+ a.equal(result.status,0,result.stderr);a.ok(!(result.stdout+result.stderr).includes(key));
+ const raw=fs.readFileSync(path.join(f.root,'.cursor','mcp.json'),'utf8');a.ok(!raw.includes(key));
+ const entry=JSON.parse(raw).mcpServers['nixflex-staging'];
+ a.equal(entry.env.NIXFLEX_BASE_URL,stage);a.equal(entry.env.NIXFLEX_API_KEY,'${env:NIXFLEX_API_KEY}');
+ a.ok(entry.args.join(' ').includes('nixflex-mcp@0.4.0'));
+ a.ok(!fs.existsSync(path.join(f.root,'node_modules')),'setup only writes config');
+ const bad=fixture();a.notEqual(bad.run(['mcp','setup','vscode']).status,0);
+ a.ok(!fs.existsSync(path.join(bad.root,'.cursor','mcp.json')));
 });

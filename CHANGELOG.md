@@ -1,3 +1,9 @@
+## K5 approved follow-up — 2 November 2026
+
+- Versions approved; SDK/CLI Knowledge coverage unchanged. Legacy draft GET can normalize and save: manual use only, excluded from the safe checker and MCP.
+- Published-mode MCP setup pins 0.4.0; publish and verify MCP before Node. Unpublished-mode refusal remains tested.
+- No push or publication performed.
+
 ## Unreleased K5 — 2 November 2026
 
 - All 39 public Knowledge operations plus automatic keyterms read.
@@ -5,7 +11,7 @@
 - New CLI POST/change commands require confirmation. Safe CLI errors preserve uncertainty.
 - Complete K1–K5 public method guides; no private signing-secret or account-erasure additions.
 - Node public declarations no longer export unused private provider-specific types; engine endpoints unchanged.
-- Proposed versions, not published; successful writes await manual staging.
+- Approved versions, not published; successful writes await manual staging.
 
 ## Unreleased K4 â€” 2 November 2026
 
