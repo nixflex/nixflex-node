@@ -88,11 +88,25 @@ import type {
   SmsCampaignStatus, SmsCampaignDetail, SmsCampaignDetailParams, SmsCampaignCreateResponse,
 } from '../types/sms.js';
 
+import type * as C5 from '../types/campaign-controls.js';
 export class SmsCampaigns {
+  cancel(id: string, opts?: RequestOptions): Promise<C5.CampaignCancelResponse> {
+    return this.http.request('POST', `/sms/campaigns/${encodeURIComponent(id)}/cancel`, undefined, undefined, opts);
+  }
+  consent(id: string, params: C5.CampaignConsentParams, opts?: RequestOptions): Promise<C5.CampaignConsentResponse> {
+    return this.http.request('POST', `/sms/campaigns/${encodeURIComponent(id)}/consent`, params, undefined, opts);
+  }
+  resume(id: string, opts?: RequestOptions): Promise<C5.CampaignResumeResponse> {
+    return this.http.request('POST', `/sms/campaigns/${encodeURIComponent(id)}/resume`, undefined, undefined, opts);
+  }
+  update(id: string, params: C5.SmsCampaignUpdateParams, opts?: RequestOptions): Promise<C5.SmsCampaignUpdateResponse> {
+    return this.http.request('PATCH', `/sms/campaigns/${encodeURIComponent(id)}`, params, undefined, opts);
+  }
+
   constructor(private readonly http: HttpClient) {}
 
   /** Create a one-time SMS broadcast ({{variable}} templating per recipient,
-   * up to 10,000 recipients). from_number may be on either carrier (Twilio or
+   * up to 100,000 recipients). from_number may be on either carrier (Twilio or
    * Telnyx) and must be a number on your own account. */
   create(params: SmsCampaignCreateParams, opts?: RequestOptions): Promise<SmsCampaignCreateResponse> {
     return this.http.request('POST', '/sms/campaigns', smsCampaignInput(params), undefined, opts);
@@ -104,7 +118,7 @@ export class SmsCampaigns {
   }
 
   /** All campaigns, newest first, with live-computed delivery counts. */
-  list(params: { status?: SmsCampaignStatus; limit?: number; before?: string } = {}, opts?: RequestOptions): Promise<SmsCampaignListResponse> {
+  list(params: { status?: string; limit?: number; before?: string } = {}, opts?: RequestOptions): Promise<SmsCampaignListResponse> {
     return this.http.request('GET', '/sms/campaigns', undefined, { status: params.status, limit: params.limit, before: params.before }, opts);
   }
 

@@ -25,7 +25,16 @@ export * from './types/core.js';
 export * from './resources/organisation.js';
 export type { PhoneNumberMoveParams, PhoneNumberMoveResponse } from './resources/number-move.js';
 
+import { Contacts } from './resources/contacts.js';
+export * from './types/contacts.js';
+import { WebAgent } from './resources/web-agent.js';
+export * from './types/web-agent.js';
+import { Inbox } from './resources/inbox.js';
+export * from './types/inbox.js';
 export class Nixflex {
+  readonly inbox: Inbox;
+  readonly webAgent: WebAgent;
+  readonly contacts: Contacts;
   readonly account: Account;
   readonly voices: Voices;
   readonly organisation: Organisation;
@@ -50,6 +59,9 @@ export class Nixflex {
 
   constructor(options: NixflexClientOptions) {
     const http = new HttpClient(options);
+    this.inbox = new Inbox(http);
+    this.webAgent = new WebAgent(http);
+    this.contacts = new Contacts(http);
     this.account = new Account(http);
     this.voices = new Voices(http);
     this.organisation = new Organisation(http);
@@ -76,6 +88,7 @@ export default Nixflex;
 export type { NixflexClientOptions, RequestOptions };
 export { HttpClient, SDK_VERSION } from './client.js';
 export * from './types/campaign-policy.js';
+export * from './types/campaign-controls.js';
 export * from './errors.js';
 export * from './types/agents.js';
 export * from './types/calls.js';

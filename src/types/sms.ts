@@ -17,27 +17,31 @@ export interface SmsSendResponse {
 export interface SmsCampaignRecipient extends RecipientLocation {
   phone: string;
   /** Missing referenced values may refuse creation or dispatch. */
-  variables?: Record<string, string>;
+  variables?: Record<string, unknown>;
 }
-export interface SmsCampaignCreateParams extends CampaignPolicy {
+export interface SmsCampaignCreateParams extends Omit<CampaignPolicy, 'reuse_campaign_id'> {
   agent_id: string; from_number: string; name?: string;
   message_template: string;
   recipients: SmsCampaignRecipient[];
-  schedule_type?: 'now' | 'schedule'; scheduled_date?: string;
-  window_start_minutes?: number; window_end_minutes?: number;
-  window_days?: Weekday[]; timezone?: string; reply_context_prompt?: string;
+  schedule_type?: 'now' | 'schedule'; scheduled_date?: string | null;
+  window_start_minutes?: number | null; window_end_minutes?: number | null;
+  window_days?: Weekday[] | null; timezone?: string | null; reply_context_prompt?: string | null;
 }
 export type SmsCampaignStatus = 'draft' | 'scheduled' | 'launching' | 'running' | 'paused' | 'done' | 'failed' | 'cancelled';
 export interface SmsCampaign {
-  campaign_id: string; agent_id: string; name: string; status: SmsCampaignStatus;
-  from_number?: string; message_template?: string;
+  campaign_id: string; agent_id: string; name: string | null; status: string;
+  from_number?: string | null; message_template?: string;
+  id?: string; api_key_id?: string; schedule_type?: string; timezone?: string | null;
+  window_start_minutes?: number | null; window_end_minutes?: number | null; window_days?: Weekday[] | null;
+  started_at?: string | null; completed_at?: string | null; updated_at?: string | null; claimed_at?: string | null;
+  allow_wider_hours?: boolean; reply_count?: number; total_segments?: number;
   total_count: number; delivered_count: number; failed_count: number; pending_count: number;
   /** Handed to carrier; distinct from delivered and failed. */
   sent_count?: number; undelivered_count?: number; segments_count?: number; segments_estimated?: boolean;
-  source?: string; scheduled_date?: string | null; created_at: string;
+  source?: string; scheduled_date?: string | null; created_at: string | null;
   is_active?: boolean; reply_context_prompt?: string | null; reply_window_hours?: number;
 }
-export interface SmsCampaignCreateResponse extends CampaignValidation {
+export interface SmsCampaignCreateResponse extends CampaignValidation, SmsCampaignLaunchResponse {
   campaign_id: string; status: string; valid_count?: number; invalid_count?: number;
   invalid?: BatchInvalidEntry[]; total_count?: number; message?: string;
 }
@@ -46,7 +50,7 @@ export interface SmsCampaignDetailParams {
 }
 export interface SmsCampaignRecipientRecord {
   id: string; phone_number: string; status: string;
-  variables?: Record<string, string>; rendered_message?: string | null;
+  variables?: Record<string, unknown>; rendered_message?: string | null;
   sent_at?: string | null; delivered_at?: string | null; error_message?: string | null;
   country?: string | null; timezone?: string | null;
   [field: string]: unknown;

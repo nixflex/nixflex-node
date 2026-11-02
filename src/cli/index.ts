@@ -37,6 +37,7 @@ import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
 import { organisationCommand, organisationHelp } from './organisation.js';
 import { coreGroups, coreFlags, coreHelp, coreRead, createAccount } from './core.js';
+import { c5Groups, c5Flags, c5Help, isC5, c5Command } from './c5.js';
 import { coreCallList, coreCallerImport } from './core-fields.js';
 import { setupMcp } from './mcp/setup.mjs';
 import type { PhoneNumberUpdateParams } from '../types/phone-numbers.js';
@@ -187,7 +188,7 @@ function recipientsFromCsv(file: string, allowOverride: boolean): Record<string,
 }
 
 // ---------- help ----------
-const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', ...coreGroups];
+const GROUPS = ['login', 'logout', 'whoami', 'usage', 'doctor', 'completion', 'mcp', 'agents', 'calls', 'campaigns', 'numbers', 'callers', 'sms', 'webhooks', 'keys', 'organisation', ...coreGroups, ...c5Groups];
 const HELP = `nixflex ${VERSION} - the Nixflex voice AI platform from your terminal
 
 USAGE  nixflex <group> <command> [args] [--json] [--key KEY] [--base-url URL]
@@ -302,6 +303,7 @@ async function main(): Promise<void> {
     options: {
       ...kitFlags,
       ...coreFlags,
+      ...c5Flags,
       ...agentListFlags,
       ...callReadFlags,
       'mcp-local': { type: 'string' },
@@ -322,7 +324,7 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
@@ -345,6 +347,7 @@ async function main(): Promise<void> {
 
   if (group === 'keys' && cmd === 'create') { out(await createAccount(bodyFrom(values, { name: s('name'), email: s('email') }), confirmed, s('base-url') || readConfig().base_url)); return; }
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
+  if (isC5(group, cmd, a1)) { out(await c5Command(client, positionals, values, bodyFrom(values), confirmed)); return; }
   if (coreGroups.includes(group) || (group === 'keys' && cmd === 'activity')) { out(await coreRead(client, group, cmd, a1, values)); return; }
   if (group === 'organisation') { out(await organisationCommand(client,cmd,a1,bodyFrom(values),confirmed)); return; }
   const limit = s('limit') ? parseInt(s('limit') as string, 10) : undefined;

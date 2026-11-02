@@ -92,9 +92,9 @@ export interface OutboundCallResponse {
 export interface BatchRecipient extends RecipientLocation {
   phone: string;
   /** Injected as context automatically - no {{placeholders}} needed in the prompt. */
-  variables?: Record<string, string>;
+  variables?: Record<string, unknown>;
   /** Replaces the campaign prompt for this recipient only. */
-  prompt_override?: string;
+  prompt_override?: string | null;
 }
 
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
@@ -114,14 +114,14 @@ export interface BatchCampaignParams extends CampaignPolicy {
   /** 'now' (default, requests launch subject to recipient gates) or 'schedule'. */
   schedule_type?: 'now' | 'schedule';
   /** YYYY-MM-DD. Required when schedule_type is 'schedule'. */
-  scheduled_date?: string;
+  scheduled_date?: string | null;
   /** Calling window start, minutes since midnight (540 = 9:00am). */
-  window_start_minutes?: number;
+  window_start_minutes?: number | null;
   /** Calling window end, minutes since midnight (1080 = 6:00pm). Overnight windows (start > end) are supported. */
-  window_end_minutes?: number;
-  window_days?: Weekday[];
+  window_end_minutes?: number | null;
+  window_days?: Weekday[] | null;
   /** Campaign IANA timezone. Recipient country/timezone and current contact policy still gate each dispatch. */
-  timezone?: string;
+  timezone?: string | null;
 }
 
 export interface BatchInvalidEntry {
@@ -140,6 +140,7 @@ export interface BatchCreateResponse extends CampaignValidation {
 }
 
 export interface BatchLaunchResponse {
+  total_recipients?: number;
   campaign_id: string;
   status: string;
   enqueued?: number;

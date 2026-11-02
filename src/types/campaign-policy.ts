@@ -7,12 +7,14 @@ export interface CampaignPolicy {
   hours_confirmation?: string;
   skip_invalid?: boolean;
   source?: string;
-  reuse_campaign_id?: string;
+  /** Voice only; SMS does not implement reuse. */
+  reuse_campaign_id?: string | null;
   reply_window_hours?: number;
 }
 export interface RecipientLocation { country?: string; timezone?: string; }
 export interface ContactLocation { recipient_country?: string; recipient_timezone?: string; }
 export interface CampaignValidation {
+  total?: number; total_recipients?: number; duplicate_policy?: string; duplicate_choice_required?: boolean;
   duplicates?: unknown;
   missing_details?: unknown;
   validation?: unknown;

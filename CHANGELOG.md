@@ -1,3 +1,20 @@
+## Unreleased K3 — 2 November 2026
+
+- Added voice/SMS campaign controls, contact-hour preview and suppression lists,
+  web widget settings, and agent inbox reads/settings with exact public paths.
+- Node/CLI and Python sync/async now cover all 27 C5 operations. Revisions and
+  read versions stay strings; nullable fields, JSON variables and cursors survive.
+- Python inbox boolean queries use lowercase true/false. Reads never mark read.
+- MCP now has 59 tools: 44 existing definitions/handlers unchanged plus 15 reviewed
+  additions. Every new mutation requires confirmation before any request.
+- Intentional MCP exclusions: voice/SMS resume, voice/SMS consent and suppression
+  removal can enable outreach. All remain in API/SDK/CLI. Signup remains excluded
+  because it returns a new secret; bulk deletion remains excluded for AI safety.
+- Creation can start work immediately; there is no safe draft-only campaign mode.
+  Writes never automatically repeat. Successful real writes need separate testing.
+- Candidate versions unchanged; nothing published. Existing SDK/CLI methods and
+  engine endpoints remain available. SMS reuse_campaign_id is not supported.
+
 # 0.10.0 — K1, 1 November 2026 (unpublished)
 
 Removed calls.billing, phoneNumbers.setMonitor/getMonitor, storage/llm/tts.set/get/delete; CLI calls billing, numbers monitor and storage/llm/tts commands.

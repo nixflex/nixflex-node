@@ -81,10 +81,24 @@ export class Calls {
 // ============================================
 import type { BatchCampaignParams, BatchCreateResponse, BatchLaunchResponse } from '../types/calls.js';
 
+import type * as C5 from '../types/campaign-controls.js';
 export class Campaigns {
+  cancel(id: string, opts?: RequestOptions): Promise<C5.CampaignCancelResponse> {
+    return this.http.request('POST', `/calls/batch/${encodeURIComponent(id)}/cancel`, undefined, undefined, opts);
+  }
+  consent(id: string, params: C5.CampaignConsentParams, opts?: RequestOptions): Promise<C5.CampaignConsentResponse> {
+    return this.http.request('POST', `/calls/batch/${encodeURIComponent(id)}/consent`, params, undefined, opts);
+  }
+  resume(id: string, opts?: RequestOptions): Promise<C5.CampaignResumeResponse> {
+    return this.http.request('POST', `/calls/batch/${encodeURIComponent(id)}/resume`, undefined, undefined, opts);
+  }
+  list(params: C5.CampaignListQuery = {}, opts?: RequestOptions): Promise<C5.CampaignListResponse> {
+    return this.http.request('GET', '/campaigns', undefined, { ...params }, opts);
+  }
+
   constructor(private readonly http: HttpClient) {}
 
-  /** Create a campaign. Launch and each dispatch respect consent, recipient-local hours and contact checks. */
+  /** Create executable work, not a draft. The default requests immediate launch; scheduled work can start automatically. Each dispatch still checks consent and local hours. */
   create(params: BatchCampaignParams, opts?: RequestOptions): Promise<BatchCreateResponse> {
     return this.http.request<BatchCreateResponse>('POST', '/calls/batch', params, undefined, opts);
   }
