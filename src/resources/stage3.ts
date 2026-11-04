@@ -2,6 +2,8 @@
 // src/resources/phone-numbers.ts
 // ============================================
 import type { HttpClient, RequestOptions } from '../client.js';
+import { updateCredentials } from '../number-features.js';
+import type { NumberCredentials, NumberCredentialsUpdated } from '../types/google-calendar.js';
 import { smsCampaignInput } from '../sms-campaign-input.js';
 import { readNumberUsage } from './number-usage.js';
 import { moveNumber, type PhoneNumberMoveParams, type PhoneNumberMoveResponse } from './number-move.js';
@@ -19,6 +21,9 @@ function enc(phoneNumber: string): string {
 
 export class PhoneNumbers {
   constructor(private readonly http: HttpClient) {}
+  updateCredentials(phoneNumber: string, body: NumberCredentials, opts?: RequestOptions): Promise<NumberCredentialsUpdated> {
+    return updateCredentials(this.http,phoneNumber,body,opts);
+  }
 
   /** Retained-history usage, not a billing ledger. Defaults: all, UTC. */
   usage(phoneNumber: string, params: NumberUsageParams = {}, opts?: RequestOptions): Promise<NumberUsageResponse> {

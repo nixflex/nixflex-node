@@ -126,6 +126,13 @@ export class NixflexOutcomeUnknownError extends NixflexServerError {
 }
 
 /** Map a status + body to the right error class. */
+export class NixflexConflictError extends NixflexError {
+  constructor(...args: ConstructorParameters<typeof NixflexError>) { super(...args); this.name = 'NixflexConflictError'; }
+}
+/** Confirmed suppression: nothing sent. Never bypass the opt-out or retry sending. */
+export class NixflexDoNotContactError extends NixflexConflictError {
+  constructor(...args: ConstructorParameters<typeof NixflexError>) { super(...args); this.name = 'NixflexDoNotContactError'; }
+}
 export function errorFromResponse(
   status: number,
   body: NixflexAPIErrorBody | null,
@@ -142,6 +149,8 @@ export function errorFromResponse(
   if (status === 401) return new NixflexAuthenticationError(status, body, requestId);
   if (status === 402) return new NixflexPaymentRequiredError(status, body, requestId);
   if (status === 404) return new NixflexNotFoundError(status, body, requestId);
+  if (status === 409 && body?.error?.code === 'do_not_contact') return new NixflexDoNotContactError(status, body, requestId);
+  if (status === 409) return new NixflexConflictError(status, body, requestId);
   if (status === 429) return new NixflexRateLimitError(status, body, requestId, retryAfterSeconds);
   if (status === 400 || status === 422) return new NixflexInvalidRequestError(status, body, requestId);
   if (status >= 500) return new NixflexServerError(status, body, requestId);

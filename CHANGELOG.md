@@ -1,3 +1,11 @@
+# 0.11.0 — 2026-11-04 (unpublished candidate)
+
+- Added four per-number Google Calendar methods and in-place carrier credential updates; matching CLI commands / five MCP tools (94 total).
+- Credential CLI input is private environment/stdin only; MCP reads private environment after explicit confirmation. No secret arguments/output or automatic write retries.
+- Added typed calendar/credential errors and nullable booking webhook models; service accepts string, number or null.
+- Compatibility notice: SMS suppression is now HTTP 409 do_not_contact/conflict. Node/Python: catch NixflexDoNotContactError, while retaining old-server 400 invalid_request handling. MCP/CLI: inspect structured status/code. Never retry or remove opt-out automatically; not every 400 is suppression.
+- All 89 previous MCP tools, schemas, handlers and safeguards preserved. Engine endpoints and previous kit exclusions unchanged except the expressly added K6 operations.
+
 ## Unreleased K5b — 2 November 2026
 
 - Document and verify caller_not_found versus phone_number_not_found; error mapping and retry behavior are unchanged.

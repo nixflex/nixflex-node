@@ -140,3 +140,15 @@ See KNOWLEDGE.md and TEAM-INTEGRATIONS.md for defaults, limits, errors and repla
 | client.webAgent | update(number: string, params: C.WebAgentUpdateParams, opts?: RequestOptions): Promise<C.WebAgentUpdateResponse> |
 | Nixflex | static createKey({name?,email?}, baseUrl?) — unauthenticated; returns a new secret once. Store privately. |
 | module | verifyWebhookSignature(rawBody, header, signingSecret, options?) — verify raw bytes before trusting a webhook. |
+
+## K6 per-number additions
+
+| HTTP operation (number is URL-encoded E.164) | Node / CLI command | Python sync + async | MCP |
+| --- | --- | --- | --- |
+| POST /v1/integrations/google-calendar/number/{number}/connect | integrations.connectGoogleCalendar / integrations connectGoogleCalendar | integrations.connect_google_calendar | connect_google_calendar |
+| GET /v1/integrations/google-calendar/number/{number} | integrations.getGoogleCalendar / integrations getGoogleCalendar | integrations.get_google_calendar | get_google_calendar |
+| DELETE /v1/integrations/google-calendar/number/{number} | integrations.disconnectGoogleCalendar / integrations disconnectGoogleCalendar | integrations.disconnect_google_calendar | disconnect_google_calendar |
+| PATCH /v1/integrations/google-calendar/number/{number} | integrations.updateGoogleCalendarSettings / integrations updateGoogleCalendarSettings | integrations.update_google_calendar_settings | update_google_calendar_settings |
+| POST /v1/phone-numbers/{number}/credentials | phoneNumbers.updateCredentials / numbers updateCredentials | phone_numbers.update_credentials | update_phone_number_credentials |
+
+See NUMBER-FEATURES.md for exact input/output and errors.

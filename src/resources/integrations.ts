@@ -1,4 +1,6 @@
 import type { HttpClient, RequestOptions } from '../client.js';
+import { numberFeature, calendarPath } from '../number-features.js';
+import type { GoogleCalendarConnect, GoogleCalendarDisconnect, GoogleCalendarStatus, GoogleCalendarSettings, GoogleCalendarSettingsPatch } from '../types/google-calendar.js';
 import type { IntegrationProvider, IntegrationSettings, IntegrationReads, IntegrationReceipt, AgentPrecall,
   CustomFunctionInput, CustomFunctionView, FunctionReceipt } from '../types/integrations.js';
 const providers: IntegrationProvider[] = ['calcom', 'slack', 'zapier', 'make', 'gohighlevel', 'webhook', 'webhook2', 'precall', 'web-calls'];
@@ -10,6 +12,19 @@ const functions = (number: string) => `/integrations/custom-functions/number/${e
 /** API-key authority, owned numbers only. No automatic logging of configuration. */
 export class Integrations {
   constructor(private readonly http: HttpClient) {}
+  /** Returns a short-lived link for a human to open; never opens a browser. */
+  connectGoogleCalendar(number: string, returnUrl: string, opts?: RequestOptions): Promise<GoogleCalendarConnect> {
+    return numberFeature(this.http,'POST',calendarPath(number)+'/connect',{return_url:returnUrl},'calendar',opts);
+  }
+  getGoogleCalendar(number: string, opts?: RequestOptions): Promise<GoogleCalendarStatus> {
+    return numberFeature(this.http,'GET',calendarPath(number),undefined,'calendar',opts);
+  }
+  disconnectGoogleCalendar(number: string, opts?: RequestOptions): Promise<GoogleCalendarDisconnect> {
+    return numberFeature(this.http,'DELETE',calendarPath(number),undefined,'calendar',opts);
+  }
+  updateGoogleCalendarSettings(number: string, body: GoogleCalendarSettingsPatch, opts?: RequestOptions): Promise<GoogleCalendarSettings> {
+    return numberFeature(this.http,'PATCH',calendarPath(number),body,'calendar',opts);
+  }
   get<P extends IntegrationProvider>(provider: P, number: string, opts?: RequestOptions): Promise<IntegrationReads[P]> {
     return this.http.request('GET', path(provider, number), undefined, undefined, opts);
   }

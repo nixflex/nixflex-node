@@ -1,6 +1,6 @@
 {
   "name": "nixflex",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Official Node.js SDK for the Nixflex voice AI platform - AI phone agents, outbound campaigns, and SMS.",
   "keywords": [
     "nixflex",
@@ -46,7 +46,9 @@
     "ORGANISATIONS.md",
     "KNOWLEDGE.md",
     "METHODS.md",
-    "TEAM-INTEGRATIONS.md"
+    "TEAM-INTEGRATIONS.md",
+    "NUMBER-FEATURES.md",
+    "KIT-EXAMPLES-K6.md"
   ],
   "engines": {
     "node": ">=18"

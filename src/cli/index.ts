@@ -36,6 +36,7 @@ import { agentListFlags, agentListParams } from './agent-list.js';
 import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
 import { integrationsCommand, integrationsHelp } from './integrations.js';
+import { k6Flags, k6Help, isK6, k6Command, guardCredentialArguments } from './number-features.js';
 import { knowledgeCommand, knowledgeFlags } from './knowledge.js';
 import { knowledgeHelp } from './knowledge-plan.js';
 import { privateIntegration } from './integration-output.js';
@@ -303,10 +304,12 @@ async function mcpSetup(app: string, confirmed: boolean, localPackage?: string):
 
 // ---------- main ----------
 async function main(): Promise<void> {
+  guardCredentialArguments(process.argv.slice(2));
   const { values, positionals } = parseArgs({
     args: process.argv.slice(2), allowPositionals: true, strict: false,
     options: {
       ...kitFlags,
+      ...k6Flags,
       ...knowledgeFlags,
       ...coreFlags,
       ...c5Flags,
@@ -331,7 +334,7 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp + knowledgeHelp); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp + knowledgeHelp + k6Help); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
@@ -354,6 +357,7 @@ async function main(): Promise<void> {
 
   if (group === 'keys' && cmd === 'create') { out(await createAccount(bodyFrom(values, { name: s('name'), email: s('email') }), confirmed, s('base-url') || readConfig().base_url)); return; }
   const client = new Nixflex({ apiKey: resolveKey(s('key')), baseUrl: s('base-url') || readConfig().base_url });
+  if (isK6(group, cmd)) { out(await k6Command(client, positionals, values, confirmed, () => bodyFrom(values))); return; }
   if (isC5(group, cmd, a1)) { out(await c5Command(client, positionals, values, bodyFrom(values), confirmed)); return; }
   if (coreGroups.includes(group) || (group === 'keys' && cmd === 'activity')) { out(await coreRead(client, group, cmd, a1, values)); return; }
   if (group === 'knowledge') { out(await knowledgeCommand(client, positionals, values, bodyFrom(values), confirmed)); return; }
