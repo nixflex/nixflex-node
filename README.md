@@ -48,3 +48,7 @@ Node and Python raise NixflexNotFoundError with status=404 and the exact server 
 ## K6 additions
 
 Four Google Calendar methods, private number credentials, SMS 409 handling and booking models. Read [NUMBER-FEATURES.md](NUMBER-FEATURES.md) for exact fields, safe errors and recovery. All earlier exclusions remain, except the two explicit K6 MCP additions noted there.
+
+## K7 additions
+
+Read a call’s retained booking result and its saved outbound request. Optional UUID request_id adds duplicate protection without automatic redial. Prepare and save the ID before the first send. See [CALL-REQUESTS.md](CALL-REQUESTS.md) for every state/error and [KIT-EXAMPLES-K7.md](KIT-EXAMPLES-K7.md) for Node, CLI, Python sync/async and MCP examples. Existing no-ID calls keep their old behavior.

@@ -37,6 +37,7 @@ import { callCreateBody } from './call-create.js';
 import { callRead, callReadFlags } from './call-reads.js';
 import { integrationsCommand, integrationsHelp } from './integrations.js';
 import { k6Flags, k6Help, isK6, k6Command, guardCredentialArguments } from './number-features.js';
+import { callRequestFlags, callRequestHelp, prepareCallCli, withCallRequestId, callRequestRead } from './call-requests.js';
 import { knowledgeCommand, knowledgeFlags } from './knowledge.js';
 import { knowledgeHelp } from './knowledge-plan.js';
 import { privateIntegration } from './integration-output.js';
@@ -310,6 +311,7 @@ async function main(): Promise<void> {
     options: {
       ...kitFlags,
       ...k6Flags,
+      ...callRequestFlags,
       ...knowledgeFlags,
       ...coreFlags,
       ...c5Flags,
@@ -334,13 +336,14 @@ async function main(): Promise<void> {
   const [group, cmd, a1, a2] = positionals as string[];
   const s = (k: string) => values[k] as string | undefined;
   if (values.version) { process.stdout.write(VERSION + '\n'); return; }
-  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp + knowledgeHelp + k6Help); return; }
+  if (!group || values.help) { process.stdout.write(HELP + organisationHelp + coreHelp + c5Help + integrationsHelp + knowledgeHelp + k6Help + callRequestHelp); return; }
   if (!GROUPS.includes(group)) {
     const c = closest(group, GROUPS);
     fail('unknown command "' + group + '".' + (c ? ' Did you mean `nixflex ' + c + '`?' : '') + ' Run `nixflex --help`.');
   }
 
   // --- no key needed ---
+  if (group === 'calls' && cmd === 'prepare') { out(await prepareCallCli(values, bodyFrom(values), textOrFile(s('prompt')))); return; }
   if (group === 'login') {
     const key = process.env.NIXFLEX_API_KEY || await ask('API key (nxf_xxx:nxfs_xxx): ');
     if (!KEY_RE.test(key)) fail('That is not a full key pair (nxf_xxx:nxfs_xxx).');
@@ -413,9 +416,10 @@ async function main(): Promise<void> {
 
   // --- calls ---
   if (group === 'calls') {
+    if (['bookings','outboundRequest'].includes(cmd)) { out(await callRequestRead(client,cmd,a1)); return; }
     if (['history','read','recording'].includes(cmd)) { out(await callRead(client, cmd, a1, values)); return; }
     if (cmd === 'create') {
-      const body = callCreateBody(bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from'), ...contactFields(values) }), vars(values.var as string[] | undefined));
+      const body = withCallRequestId(callCreateBody(bodyFrom(values, { agent_id: s('agent'), to_number: s('to'), prompt: textOrFile(s('prompt')), from_number: s('from'), ...contactFields(values) }), vars(values.var as string[] | undefined)), values['request-id']);
       if (!body.agent_id || !body.to_number || !body.prompt) fail('calls create --agent ID --to +44... --prompt TEXT|@file [--from] [--var k=v] [--wait]');
       const created = await client.calls.create(body as never);
       if (!values.wait) { out(created); return; }

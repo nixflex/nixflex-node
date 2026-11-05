@@ -90,7 +90,7 @@ nixflex numbers updateCredentials '+12025550123' --provider twilio --confirm --j
 
 calendar-settings.json contains settings only, e.g. `{"send_invites":false}`; never carrier credentials. Omit --confirm to preview without a request. Credential commands reject --body, --key and secret flags before the argument parser can echo values. SMS --json errors expose status/type/code: stop on 409 do_not_contact; retain old 400 handling. Webhook types do not add a CLI listener or ingest endpoint.
 
-## MCP — five additions, 94 total
+## MCP — K6's five additions (current total: 96 with K7)
 
 Ask the human to approve the exact number/change before using confirm:true. Credentials are preconfigured privately in the SERVER process environment, never tool arguments or chat. Missing configuration sends nothing. Existing 89 tools retain their original safeguards.
 

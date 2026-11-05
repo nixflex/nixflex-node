@@ -66,6 +66,8 @@ export interface Call {
 
 /** Parameters for POST /v1/calls/outbound. */
 export interface OutboundCallParams extends ContactLocation {
+  /** Optional durable UUID. Save before sending; reuse only with identical inputs. */
+  request_id?: string;
   /** The agent that handles the call. Must belong to your API key. */
   agent_id: string;
   /** Who to call, E.164 ("+447386172392", not "07386172392"). NOTE: the field is to_number, not `to` - `to` is the SMS endpoints' field. */
@@ -87,6 +89,10 @@ export interface OutboundCallResponse {
   status: string;
   to: string;
   from: string;
+  request_id?: string;
+  replayed?: true;
+  request_status?: 'unconfirmed';
+  safe_to_retry?: false;
 }
 
 export interface BatchRecipient extends RecipientLocation {

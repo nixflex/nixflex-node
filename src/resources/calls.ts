@@ -5,16 +5,26 @@ import type { HttpClient, RequestOptions } from '../client.js';
 import type { Call, OutboundCallParams, OutboundCallResponse, CallDeleteResponse, CallDeleteAllResponse } from '../types/calls.js';
 import type { ListParams } from '../types/agents.js';
 import type { CallHistoryParams, CallHistoryPage, CallRead, CallRecording, CallBilling } from '../types/call-reads.js';
+import { prepareOutboundCall, createOutboundRequest, readCallBookings, readOutboundRequest } from '../call-requests.js';
+import type { OutboundRequestReceipt } from '../types/call-requests.js';
 
 export class Calls {
   constructor(private readonly http: HttpClient) {}
+  /** Generate a UUID locally before sending; save and reuse the returned body unchanged. */
+  prepare(params: OutboundCallParams) { return prepareOutboundCall(params); }
+  bookings(callId: string, opts?: RequestOptions) { return readCallBookings(this.http,callId,opts); }
+  outboundRequest(requestId: string, opts?: RequestOptions) { return readOutboundRequest(this.http,requestId,opts); }
 
   /** Trigger an outbound AI call. FIRE-AND-FORGET: returns immediately with a
    * call_id; ringing, conversation and ending happen asynchronously. Set a
    * webhook_url on the agent or number to receive call.completed when it ends.
    * The dialling number must be OUTBOUND-ENABLED (inbound working does not
    * mean outbound works - separate switches). */
-  create(params: OutboundCallParams, opts?: RequestOptions): Promise<OutboundCallResponse> {
+  create(params: OutboundCallParams & {request_id: string}, opts?: RequestOptions): Promise<OutboundRequestReceipt>;
+  create(params: OutboundCallParams & {request_id?: undefined}, opts?: RequestOptions): Promise<OutboundCallResponse>;
+  create(params: OutboundCallParams, opts?: RequestOptions): Promise<OutboundCallResponse | OutboundRequestReceipt>;
+  create(params: OutboundCallParams, opts?: RequestOptions): Promise<OutboundCallResponse | OutboundRequestReceipt> {
+    if (params.request_id !== undefined) return createOutboundRequest(this.http,params,opts);
     return this.http.request<OutboundCallResponse>('POST', '/calls/outbound', params, undefined, opts);
   }
 

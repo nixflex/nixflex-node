@@ -48,7 +48,9 @@
     "METHODS.md",
     "TEAM-INTEGRATIONS.md",
     "NUMBER-FEATURES.md",
-    "KIT-EXAMPLES-K6.md"
+    "KIT-EXAMPLES-K6.md",
+    "CALL-REQUESTS.md",
+    "KIT-EXAMPLES-K7.md"
   ],
   "engines": {
     "node": ">=18"

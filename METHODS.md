@@ -152,3 +152,16 @@ See KNOWLEDGE.md and TEAM-INTEGRATIONS.md for defaults, limits, errors and repla
 | POST /v1/phone-numbers/{number}/credentials | phoneNumbers.updateCredentials / numbers updateCredentials | phone_numbers.update_credentials | update_phone_number_credentials |
 
 See NUMBER-FEATURES.md for exact input/output and errors.
+
+## K7 call results and requests
+
+| Operation | Node | CLI | Python sync / async | MCP |
+| --- | --- | --- | --- | --- |
+| GET /v1/calls/{call_id}/bookings | calls.bookings(id) | calls bookings ID | calls.bookings(id) | get_call_bookings |
+| POST /v1/calls/outbound, optional UUID request_id | calls.create(params) | calls create --request-id UUID or --body @prepared.json | calls.create(..., request_id=uuid) | create_call, optional request_id / safe_retry / confirm |
+| GET /v1/calls/outbound/requests/{request_id} | calls.outboundRequest(uuid) | calls outboundRequest UUID | calls.outbound_request(uuid) | get_outbound_call_request |
+| Local preparation, no API request | calls.prepare(params), prepareOutboundCall(params) | calls prepare --output prepared.json | calls.prepare(**params), prepare_outbound_call(params) | create_call with safe_retry:true and no request_id |
+
+The two GET routes are new coverage. POST already existed; request_id extends it. Preparation is local, not another API endpoint. MCP now registers 96 tools (94 prior plus two reads); only create_call gains optional inputs/guidance. Its old inputs and annotations, all other 93 contracts and all unrelated handlers are pinned to K6. Public-scope exclusions remain unchanged.
+
+See CALL-REQUESTS.md for exact fields, typed errors, unchanged no-ID behavior and CLI/MCP confirmation rules.

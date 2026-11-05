@@ -1,3 +1,12 @@
+# K7 — 2026-11-05 (same unpublished candidate versions)
+
+- Added call booking-result and outbound request-status reads to Node, CLI, Python sync/async and MCP (96 tools).
+- Optional UUID request_id on outbound create; local prepare helpers save the identity before sending. CLI --output writes exclusive UTF-8 JSON; no implicit redial or replacement ID.
+- First acceptance 201 and same-call replay 200 are distinct; unconfirmed journal acknowledgement preserves a known call ID. Four typed B56 errors retain safe UUID/status/code details.
+- Booking ready/none/processing/deleted/unavailable stay distinct; private markers are removed. Exact timeline/final shapes and examples are in CALL-REQUESTS.md / KIT-EXAMPLES-K7.md.
+- MCP create_call keeps the old no-ID path. New safe_retry prepares only; request_id requires confirm:true. The other 93 contracts and all unrelated handlers remain unchanged. Earlier exclusions remain.
+- Local candidate only. Locked full-list/schema checks await K7 owner approval; no publication is authorized by this changelog.
+
 # 0.11.0 — 2026-11-04 (unpublished candidate)
 
 - Added four per-number Google Calendar methods and in-place carrier credential updates; matching CLI commands / five MCP tools (94 total).
