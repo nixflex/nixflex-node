@@ -1,6 +1,6 @@
 # K7 examples (unpublished candidates)
 
-Set credentials privately outside code. Every example explicitly supplies a base URL; do not copy a production URL into a test. Preparation is local. Running create places a paid call: execute that line only for a human-approved call, never as an automatic retry.
+Set credentials privately outside code. Every example explicitly supplies a base URL; do not copy a production URL into a test. Preparation is local. Save the account and base-URL association with the intent; reuse that same environment and account when reconciling or retrying. Running create places a paid call: execute that line only for a human-approved call, never as an automatic retry.
 
 ## Node
 
