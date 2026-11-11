@@ -165,3 +165,9 @@ See NUMBER-FEATURES.md for exact input/output and errors.
 The two GET routes are new coverage. POST already existed; request_id extends it. Preparation is local, not another API endpoint. MCP now registers 96 tools (94 prior plus two reads); only create_call gains optional inputs/guidance. Its old inputs and annotations, all other 93 contracts and all unrelated handlers are pinned to K6. Public-scope exclusions remain unchanged.
 
 See CALL-REQUESTS.md for exact fields, typed errors, unchanged no-ID behavior and CLI/MCP confirmation rules.
+
+## K9 B57 deletion
+
+| client.campaigns | delete(id: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> |
+
+See [B57-DELETES.md](B57-DELETES.md) for the three receipts, queued 503, permissions, uncertainty and unchanged bulk guard.

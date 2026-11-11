@@ -156,9 +156,23 @@ export interface BatchLaunchResponse {
 
 export interface CallDeleteResponse {
   call_id: string;
-  deleted: boolean;
-  /** Legacy cleanup indicator; not proof an object existed or every copy was erased. */
+  deleted: true;
+  /** Managed cleanup indicator, not proof that every carrier/external copy is erased. */
   recording_deleted: boolean;
+  recording_cleanup: 'carrier_best_effort' | 'queued';
+}
+
+/** Voice/SMS campaign is hidden; history and used charges remain. No refunds. */
+export interface CampaignDeleteResponse {
+  campaign_id: string;
+  deleted: true;
+  message: string;
+}
+
+/** On NixflexServerError, status 503 and code hangup_pending. Not a success receipt. */
+export interface ContentDeletePendingDetails {
+  deleted: false;
+  retry_pending: true;
 }
 
 export interface CallDeleteAllResponse {

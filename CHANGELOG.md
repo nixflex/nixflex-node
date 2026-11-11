@@ -1,3 +1,11 @@
+# K9 — 2026-11-11 (same unpublished candidate versions)
+
+- Added voice campaign deletion to Node, Python sync/async, CLI and the confirmed MCP delete_campaign tool (97 tools total).
+- Call and SMS campaign deletion now describe B57: running calls end first, waiting work is cancelled, campaigns are hidden; history and used charges remain, no refund.
+- Complete 503 hangup_pending proof is preserved as a queued error, not success or an unknown outcome. Other uncertain replies remain uncertain. One DELETE per invocation, no automatic retry.
+- MCP content-delete previews make zero requests. Existing tool inputs/permissions and all unrelated tools are preserved. Bulk deletion remains excluded from MCP and keeps its separate SDK/CLI safety guard.
+- See B57-DELETES.md for receipts and error handling. K8 approved and completed the historical K7 lock updates; no earlier "awaiting K7 approval" note remains an open decision.
+
 # K7 — 2026-11-05 (same unpublished candidate versions)
 
 - Added call booking-result and outbound request-status reads to Node, CLI, Python sync/async and MCP (96 tools).

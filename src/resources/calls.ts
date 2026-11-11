@@ -73,8 +73,9 @@ export class Calls {
     return this.http.request<Call>('GET', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
   }
 
-  /** Request guarded call deletion; active/unsettled work and cleanup safety
-   * holds can refuse it. Not proof of every copy's erasure. Never auto-retried. */
+  /** End a running call, then delete its content. 503 hangup_pending with
+   * retry_pending:true means queued, not deleted. Recording cleanup may remain
+   * queued or carrier best effort. One DELETE; never automatically repeated. */
   delete(callId: string, opts?: RequestOptions): Promise<CallDeleteResponse> {
     return this.http.request<CallDeleteResponse>('DELETE', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
   }
@@ -89,10 +90,16 @@ export class Calls {
 // ============================================
 // Voice batch campaigns (POST /calls/batch)
 // ============================================
-import type { BatchCampaignParams, BatchCreateResponse, BatchLaunchResponse } from '../types/calls.js';
+import type { BatchCampaignParams, BatchCreateResponse, BatchLaunchResponse, CampaignDeleteResponse } from '../types/calls.js';
 
 import type * as C5 from '../types/campaign-controls.js';
 export class Campaigns {
+  /** Cancel waiting work, end running calls and hide the campaign. History and used
+   * charges remain; no refund. Owner/Admin only. 503 hangup_pending is queued.
+   * Missing/foreign is 404. One DELETE; never automatically repeated. */
+  delete(id: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> {
+    return this.http.request('DELETE', `/calls/batch/${encodeURIComponent(id)}`, undefined, undefined, opts);
+  }
   cancel(id: string, opts?: RequestOptions): Promise<C5.CampaignCancelResponse> {
     return this.http.request('POST', `/calls/batch/${encodeURIComponent(id)}/cancel`, undefined, undefined, opts);
   }

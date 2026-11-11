@@ -38,6 +38,7 @@ import { callRead, callReadFlags } from './call-reads.js';
 import { integrationsCommand, integrationsHelp } from './integrations.js';
 import { k6Flags, k6Help, isK6, k6Command, guardCredentialArguments } from './number-features.js';
 import { callRequestFlags, callRequestHelp, prepareCallCli, withCallRequestId, callRequestRead } from './call-requests.js';
+import { deleteCampaign } from './campaign-delete.js';
 import { knowledgeCommand, knowledgeFlags } from './knowledge.js';
 import { knowledgeHelp } from './knowledge-plan.js';
 import { privateIntegration } from './integration-output.js';
@@ -229,13 +230,14 @@ CALLS
   calls history [--number +44...] [--outcome failed] [--period month] [--cursor CURSOR]
   calls read <call_id>            nullable detail, including retained metadata
   calls recording <call_id>       recording status and expires_at-based link
-  calls delete <call_id> --confirm
+  calls delete <call_id> --confirm  end the call, then delete its content; recording cleanup may stay queued
   calls delete-all --confirm       every call and recording on the account
 
 CAMPAIGNS (voice batch)
   campaigns create --agent ID --from +44... --prompt TEXT|@file --csv people.csv [--name] [--set k=v ...]
                    CSV: phone (required), prompt_override (optional), any other column = variable
   campaigns launch <campaign_id>
+  campaigns delete <campaign_id> --confirm  cancel waiting work, end calls and hide campaign; history/charges stay
 
 NUMBERS
   numbers list [--agent ID] [--provider twilio|telnyx] [--limit N] [--cursor CURSOR]
@@ -263,7 +265,8 @@ SMS
   sms campaigns launch <id>
   sms campaigns list [--status S] [--limit N]
   sms campaigns get <id>
-  sms campaigns delete <id> --confirm
+  sms campaigns delete <id> --confirm  cancel waiting work and hide campaign; history/charges stay, no refund
+    Delete: 503 hangup_pending + retry_pending:true means queued, not deleted. No automatic retry.
 
 WEBHOOKS (per number)
   webhooks set <number> <url> [--slot 1|2]
@@ -451,6 +454,7 @@ async function main(): Promise<void> {
 
   // --- campaigns (voice batch) ---
   if (group === 'campaigns') {
+    if (cmd === 'delete') { out(await deleteCampaign(client, a1, confirmed)); return; }
     if (cmd === 'create') {
       const body = bodyFrom(values, { agent_id: s('agent'), from_number: s('from'), prompt: textOrFile(s('prompt')), name: s('name') });
       if (s('csv')) body.recipients = recipientsFromCsv(s('csv') as string, true);
@@ -459,7 +463,7 @@ async function main(): Promise<void> {
       out(await client.campaigns.create(body as never)); return;
     }
     if (cmd === 'launch') { if (!a1) fail('campaigns launch <campaign_id>'); out(await client.campaigns.launch(a1)); return; }
-    fail('campaigns: create | launch');
+    fail('campaigns: create | launch | delete');
   }
 
   // --- numbers ---

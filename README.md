@@ -1,5 +1,7 @@
 # Nixflex Node SDK and CLI — 0.11.0 candidate
 
+B57 deletion and voice campaign delete: see [B57-DELETES.md](B57-DELETES.md). K9 is an unpublished candidate; one DELETE, never an automatic retry.
+
 Node 18+ for SDK/CLI, Node 22+ for MCP setup. SDK uses native fetch; CLI parser is bundled with its notices.
 
 ~~~js

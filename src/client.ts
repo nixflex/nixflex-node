@@ -33,6 +33,7 @@ import { readStream } from './response-stream.js';
 import { transferContext } from './knowledge/transfer-context.js';
 import { uploadFile } from './knowledge/upload.js';
 import { download } from './knowledge/download.js';
+import { queuedContentDelete } from './content-delete.js';
 declare const __SDK_VERSION__: string;
 export const SDK_VERSION = __SDK_VERSION__;
 
@@ -144,7 +145,8 @@ export class HttpClient {
         continue;
       }
 
-      throw errorFromResponse(res.status, errBody, requestId, retryAfter, !isRead);
+      throw queuedContentDelete(method, path, res.status, errBody, requestId) ??
+        errorFromResponse(res.status, errBody, requestId, retryAfter, !isRead);
     }
   }
 

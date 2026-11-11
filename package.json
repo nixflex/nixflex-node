@@ -50,7 +50,8 @@
     "NUMBER-FEATURES.md",
     "KIT-EXAMPLES-K6.md",
     "CALL-REQUESTS.md",
-    "KIT-EXAMPLES-K7.md"
+    "KIT-EXAMPLES-K7.md",
+    "B57-DELETES.md"
   ],
   "engines": {
     "node": ">=18"

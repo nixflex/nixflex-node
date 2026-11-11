@@ -133,7 +133,9 @@ export class SmsCampaigns {
       { limit: opts?.limit, recipient_cursor: opts?.recipient_cursor, message_cursor: opts?.message_cursor }, opts);
   }
 
-  /** Delete an inactive/finished campaign. Active campaigns are refused; this never cancels or recalls sends. */
+  /** Cancel waiting work and hide the campaign. History/used charges remain, no refund
+   * or recall of sent SMS. Owner/Admin only. 503 hangup_pending is queued, not success.
+   * Missing/foreign is 404. One DELETE; never automatically repeated. */
   delete(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignDeleteResponse> {
     return this.http.request('DELETE', `/sms/campaigns/${encodeURIComponent(campaignId)}`, undefined, undefined, opts);
   }

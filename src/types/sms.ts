@@ -1,5 +1,5 @@
 import type { CampaignPolicy, CampaignValidation, RecipientLocation, ContactLocation } from './campaign-policy.js';
-import type { Weekday, BatchInvalidEntry } from './calls.js';
+import type { Weekday, BatchInvalidEntry, CampaignDeleteResponse } from './calls.js';
 
 /** SMS uses `to`, not the outbound-call field `to_number`. */
 export interface SmsSendParams extends ContactLocation {
@@ -67,4 +67,4 @@ export interface SmsCampaignLaunchResponse {
   held?: number; reason?: string; stopped?: boolean; stop_reason?: string; not_sent?: number;
   safe_to_retry?: false; message?: string;
 }
-export interface SmsCampaignDeleteResponse { message: string; }
+export interface SmsCampaignDeleteResponse extends CampaignDeleteResponse {}
