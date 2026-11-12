@@ -27,7 +27,7 @@ K1–K5 cover 140 of 141 public inventory operations in Node/CLI/Python. Private
 
 Only GET has bounded retries (default one). POST/PUT/PATCH/DELETE never automatically repeat, including 429, lost replies or malformed success. NixflexOutcomeUnknownError means outcome unknown and safe_to_retry false: inspect authoritative state before retrying. Never log raw errors, customer content, recordings, credentials or private integration responses.
 
-Ownership, roles, active-state, busy work, unsettled charges, revisions and cleanup refusals remain authoritative. Accepted deletion is not proof cleanup finished. API keys act with Owner authority and cannot impersonate a personal member session.
+Ownership, roles and active-account rules remain authoritative, along with refusals actually returned by each route. B57 single-call and campaign deletion ends running calls instead of waiting for settlement; other guarded cleanup routes keep their existing safety rules. Accepted deletion is not proof cleanup finished. API keys act with Owner authority and cannot impersonate a personal member session.
 
 Omitted fields stay omitted. Agent defaults are dynamic greeting true, maximum duration 300 seconds, silence hangup 10 seconds; existing agents are not rewritten. Single-call variables use dynamic_vars; variables is a non-conflicting alias. Campaign recipient variables stay unchanged. SMS requires a sender; campaign message_template and scheduled_date are canonical.
 

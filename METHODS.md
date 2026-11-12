@@ -162,7 +162,7 @@ See NUMBER-FEATURES.md for exact input/output and errors.
 | GET /v1/calls/outbound/requests/{request_id} | calls.outboundRequest(uuid) | calls outboundRequest UUID | calls.outbound_request(uuid) | get_outbound_call_request |
 | Local preparation, no API request | calls.prepare(params), prepareOutboundCall(params) | calls prepare --output prepared.json | calls.prepare(**params), prepare_outbound_call(params) | create_call with safe_retry:true and no request_id |
 
-The two GET routes are new coverage. POST already existed; request_id extends it. Preparation is local, not another API endpoint. MCP now registers 96 tools (94 prior plus two reads); only create_call gains optional inputs/guidance. Its old inputs and annotations, all other 93 contracts and all unrelated handlers are pinned to K6. Public-scope exclusions remain unchanged.
+The two GET routes are new coverage. POST already existed; request_id extends it. Preparation is local, not another API endpoint. At K7, MCP registered 96 tools (94 prior plus two reads); only create_call gained optional inputs/guidance. Those historical contracts were pinned to K6. K9 now registers 97 tools; only its two B57 delete handlers/descriptions change alongside the new voice-delete tool. Public-scope exclusions remain unchanged.
 
 See CALL-REQUESTS.md for exact fields, typed errors, unchanged no-ID behavior and CLI/MCP confirmation rules.
 
