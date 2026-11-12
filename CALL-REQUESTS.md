@@ -11,7 +11,7 @@ Source: B56 engine f6ff94d, 5 November 2026. Candidate versions remain Node/CLI 
 | GET /v1/calls/outbound/requests/{request_id} | calls.outboundRequest(uuid) | calls outboundRequest UUID | calls.outbound_request(uuid) | get_outbound_call_request |
 | Local preparation, no API request | calls.prepare(params), prepareOutboundCall(params) | calls prepare --output prepared.json | calls.prepare(**params), prepare_outbound_call(params) | create_call with safe_retry:true and no request_id |
 
-The two GET routes are new coverage. POST already existed; request_id extends it. Preparation is local, not another API endpoint. MCP now registers 96 tools (94 prior plus two reads); only create_call gains optional inputs/guidance. Its old inputs and annotations, all other 93 contracts and all unrelated handlers are pinned to K6. Public-scope exclusions remain unchanged.
+The two GET routes are new coverage. POST already existed; request_id extends it. Preparation is local, not another API endpoint. At K7, MCP registered 96 tools (94 prior plus two reads); only create_call gained optional inputs/guidance. Those historical contracts were pinned to K6. The current K9 count is 97; see B57-DELETES.md for its one added tool and two updated delete handlers/descriptions. Public-scope exclusions remain unchanged.
 
 ## Retained booking result
 

@@ -54,7 +54,7 @@ SDKs preserve status/code/request ID/details. Never log full messages/details: t
 
 401/403: credentials/ownership; 409 stale_revision: reread and reconcile; knowledge_missing: approve live pieces first; idempotency_conflict: different intent needs a different key; export_expired: explicitly create another export if wanted; session_closed/target_changed: new test requires approval; 429: respect quota, never automatically repeat writes.
 
-Current MCP candidate has 89 tools, including 19 approved Knowledge tools. Legacy getDraft/get_draft (GET /knowledge-bases/:kb/drafts/:id) can normalize and SAVE old drafts. It remains SDK/CLI-only and is excluded from MCP and the safe staging checker. SDK GET retry semantics are unchanged; use maxRetries/max_retries=0 for intentional legacy draft inspection if replay is unwanted. Live changes/deletes/accept/import/upload/job control and bulk exports are excluded. Personal sessions, account erasure, private signing-secret retrieval and excluded integrations remain outside kit scope.
+K5 introduced a candidate with 89 tools, including 19 approved Knowledge tools. K9 now has 97 tools; those 19 Knowledge tools and their exclusions are unchanged. Legacy getDraft/get_draft (GET /knowledge-bases/:kb/drafts/:id) can normalize and SAVE old drafts. It remains SDK/CLI-only and is excluded from MCP and the safe staging checker. SDK GET retry semantics are unchanged; use maxRetries/max_retries=0 for intentional legacy draft inspection if replay is unwanted. Live changes/deletes/accept/import/upload/job control and bulk exports are excluded. Personal sessions, account erasure, private signing-secret retrieval and excluded integrations remain outside kit scope.
 
 ## B49g keyterms response
 
