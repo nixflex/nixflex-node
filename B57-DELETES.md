@@ -12,11 +12,11 @@ One DELETE per invocation. Never an automatic retry. SDK mutations require the a
 
 Calls end before their content is deleted. Success returns call_id, deleted:true, recording_deleted (boolean) and recording_cleanup (carrier_best_effort or queued). These fields do not prove every external recording copy is erased.
 
-Campaign deletion cancels waiting work, ends running calls and hides the campaign. History and used charges remain; no refunds, and sent SMS cannot be recalled. Success returns campaign_id, deleted:true and message:"Campaign deleted". Owner/Admin only; missing/foreign resources return 404, including already absent resources. The kits never turn 404 into invented success.
+Campaign deletion cancels waiting work, ends running calls and hides the campaign. History and used charges remain; no refunds, and sent SMS cannot be recalled. Success returns campaign_id, deleted:true and message:"Campaign deleted". Owner/Admin only; missing/foreign resources return 404, including already absent resources. The kits never turn 404 into invented success. A previously hidden but still tracked owned item can return the same successful receipt on a deliberate repeat; hidden does not mean physically absent.
 
 HTTP 503 with error.code hangup_pending and error.details {deleted:false,retry_pending:true} means the server queued deletion and finishes once hang-up is confirmed. Node/Python raise NixflexServerError with that exact status/code/details; CLI/MCP report a structured error, never success. A later deliberate repeat of the same DELETE is safe; the kit does not repeat it or poll automatically.
 
-Other 5xx, lost replies or invalid JSON remain outcome_unknown: inspect the outcome before a deliberate retry. HTTP status and server details survive; the original server code is in details.original_code when uncertainty wrapping applies. Known 403/404 retain their exact code/details. No synthetic successful receipt is created. Existing SDK methods continue passing valid JSON through; callers should require the documented deleted:true receipt rather than treating an arbitrary JSON object as proof.
+Other 5xx, lost replies or invalid JSON remain outcome_unknown: inspect the outcome before a deliberate retry. HTTP status and server details survive; the original server code is in details.original_code when uncertainty wrapping applies. Known 403/404 retain their exact code/details. No synthetic successful receipt is created. The three MCP tools require the matching ID and full documented success receipt; empty, incomplete or wrong-ID replies remain uncertain. Existing SDK methods continue passing valid JSON through; callers should require the documented deleted:true receipt rather than treating an arbitrary JSON object as proof.
 
 Bulk calls.deleteAll() / calls.delete_all() / nixflex calls delete-all --confirm remains a separate guarded cleanup route with deleted/calls_deleted/recordings_deleted/sms_deleted counters. It is not account or SMS erasure and does not use B57's single-item queue classification. Bulk deletion stays outside MCP for safety.
 
@@ -36,12 +36,14 @@ try {
 ```
 
 ```python
+from nixflex.errors import NixflexServerError
+
 # Use await client.campaigns.delete(campaign_id) with AsyncNixflex.
 try:
     receipt = client.campaigns.delete(campaign_id)
     if receipt.get("deleted") is not True:
         raise RuntimeError("Deletion is not confirmed")
-except NixflexServerError as error:  # from nixflex.errors import NixflexServerError
+except NixflexServerError as error:
     if (error.status == 503 and error.code == "hangup_pending"
             and error.details.get("deleted") is False and error.details.get("retry_pending") is True):
         pass  # Show "Deletion queued"; do not repeat automatically.

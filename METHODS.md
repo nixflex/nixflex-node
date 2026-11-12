@@ -127,7 +127,7 @@ See KNOWLEDGE.md and TEAM-INTEGRATIONS.md for defaults, limits, errors and repla
 | client.sms.campaigns | launch(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignLaunchResponse> |
 | client.sms.campaigns | list(params: { status?: string; limit?: number; before?: string } = {}, opts?: RequestOptions): Promise<SmsCampaignListResponse> |
 | client.sms.campaigns | get(campaignId: string, opts?: RequestOptions & SmsCampaignDetailParams): Promise<SmsCampaignDetail> |
-| client.sms.campaigns | delete(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignDeleteResponse> |
+| client.sms.campaigns | delete(campaignId: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> |
 | client.sms | send(params: SmsSendParams, opts?: RequestOptions): Promise<SmsSendResponse> |
 | client.keys | activity(params: KeyActivityParams = {}, opts?: RequestOptions): Promise<KeyActivity> |
 | client.keys | rotate(opts?: RequestOptions): Promise<KeyRotateResponse> |
@@ -138,8 +138,8 @@ See KNOWLEDGE.md and TEAM-INTEGRATIONS.md for defaults, limits, errors and repla
 | client.webhooks | delete(phoneNumber: string, slot: 1 &#124; 2 = 1, opts?: RequestOptions): Promise<WebhookConfigResponse> |
 | client.webAgent | get(number: string, opts?: RequestOptions): Promise<C.WebAgentReadResponse> |
 | client.webAgent | update(number: string, params: C.WebAgentUpdateParams, opts?: RequestOptions): Promise<C.WebAgentUpdateResponse> |
-| Nixflex | static createKey({name?,email?}, baseUrl?) — unauthenticated; returns a new secret once. Store privately. |
-| module | verifyWebhookSignature(rawBody, header, signingSecret, options?) — verify raw bytes before trusting a webhook. |
+| Nixflex | static createKey({name?,email?}, baseUrl?) â€” unauthenticated; returns a new secret once. Store privately. |
+| module | verifyWebhookSignature(rawBody, header, signingSecret, options?) â€” verify raw bytes before trusting a webhook. |
 
 ## K6 per-number additions
 
@@ -168,6 +168,9 @@ See CALL-REQUESTS.md for exact fields, typed errors, unchanged no-ID behavior an
 
 ## K9 B57 deletion
 
+| Resource | Signature |
+|---|---|
 | client.campaigns | delete(id: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> |
+| client.sms.campaigns | delete(id: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> |
 
 See [B57-DELETES.md](B57-DELETES.md) for the three receipts, queued 503, permissions, uncertainty and unchanged bulk guard.

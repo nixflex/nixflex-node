@@ -70,3 +70,11 @@ test('K9 fresh list and detail reads after removal preserve absence and never in
   a.equal(seen.filter(x=>x.startsWith('DELETE ')).length,1);
  }finally{global.fetch=original}
 });
+
+test('K9 content-delete IDs cannot normalize to a bulk or different endpoint',()=>{
+ const original=global.fetch;let count=0;global.fetch=async()=>{count++;throw Error('Must not send')};
+ try{const c=new Nixflex(config);for(const id of ['', '.', '..', 'line\nbreak', 'x'.repeat(201)])
+  for(const op of [()=>c.calls.delete(id),()=>c.campaigns.delete(id),()=>c.sms.campaigns.delete(id)])a.throws(op,/Nothing was sent/);
+  a.equal(count,0);
+ }finally{global.fetch=original}
+});

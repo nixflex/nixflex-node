@@ -7,6 +7,7 @@ import type { ListParams } from '../types/agents.js';
 import type { CallHistoryParams, CallHistoryPage, CallRead, CallRecording, CallBilling } from '../types/call-reads.js';
 import { prepareOutboundCall, createOutboundRequest, readCallBookings, readOutboundRequest } from '../call-requests.js';
 import type { OutboundRequestReceipt } from '../types/call-requests.js';
+import { contentDeleteId } from '../content-delete.js';
 
 export class Calls {
   constructor(private readonly http: HttpClient) {}
@@ -77,7 +78,7 @@ export class Calls {
    * retry_pending:true means queued, not deleted. Recording cleanup may remain
    * queued or carrier best effort. One DELETE; never automatically repeated. */
   delete(callId: string, opts?: RequestOptions): Promise<CallDeleteResponse> {
-    return this.http.request<CallDeleteResponse>('DELETE', `/calls/${encodeURIComponent(callId)}`, undefined, undefined, opts);
+    return this.http.request<CallDeleteResponse>('DELETE', `/calls/${contentDeleteId(callId)}`, undefined, undefined, opts);
   }
 
   /** Request guarded call cleanup, not account/SMS erasure. Safety holds can
@@ -98,7 +99,7 @@ export class Campaigns {
    * charges remain; no refund. Owner/Admin only. 503 hangup_pending is queued.
    * Missing/foreign is 404. One DELETE; never automatically repeated. */
   delete(id: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> {
-    return this.http.request('DELETE', `/calls/batch/${encodeURIComponent(id)}`, undefined, undefined, opts);
+    return this.http.request('DELETE', `/calls/batch/${contentDeleteId(id)}`, undefined, undefined, opts);
   }
   cancel(id: string, opts?: RequestOptions): Promise<C5.CampaignCancelResponse> {
     return this.http.request('POST', `/calls/batch/${encodeURIComponent(id)}/cancel`, undefined, undefined, opts);

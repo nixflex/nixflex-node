@@ -4,6 +4,8 @@
 import type { HttpClient, RequestOptions } from '../client.js';
 import { updateCredentials } from '../number-features.js';
 import type { NumberCredentials, NumberCredentialsUpdated } from '../types/google-calendar.js';
+import type { CampaignDeleteResponse } from '../types/calls.js';
+import { contentDeleteId } from '../content-delete.js';
 import { smsCampaignInput } from '../sms-campaign-input.js';
 import { readNumberUsage } from './number-usage.js';
 import { moveNumber, type PhoneNumberMoveParams, type PhoneNumberMoveResponse } from './number-move.js';
@@ -136,8 +138,8 @@ export class SmsCampaigns {
   /** Cancel waiting work and hide the campaign. History/used charges remain, no refund
    * or recall of sent SMS. Owner/Admin only. 503 hangup_pending is queued, not success.
    * Missing/foreign is 404. One DELETE; never automatically repeated. */
-  delete(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignDeleteResponse> {
-    return this.http.request('DELETE', `/sms/campaigns/${encodeURIComponent(campaignId)}`, undefined, undefined, opts);
+  delete(campaignId: string, opts?: RequestOptions): Promise<CampaignDeleteResponse> {
+    return this.http.request('DELETE', `/sms/campaigns/${contentDeleteId(campaignId)}`, undefined, undefined, opts);
   }
 }
 
